@@ -1,0 +1,54 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  Product:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      price:
+        format: float
+        type: number
+        x-go-name: Price
+      sku:
+        type: string
+        x-go-name: SKU
+    type: object
+    x-go-package: github.com/danielmachado86/contracts/data
+info:
+  description: Documentation for Product API
+  title: of Product API
+paths:
+  /products:
+    get:
+      description: Returs a list of products
+      operationId: listProducts
+      responses:
+        "200":
+          $ref: '#/responses/productsResponse'
+      tags:
+      - products
+produces:
+- application/json
+responses:
+  productsResponse:
+    description: A list of products in the response
+    headers:
+      Body:
+        description: |-
+          All products in the system
+          in: Body
+        items:
+          $ref: '#/definitions/Product'
+        type: array
+schemes:
+- http
+swagger: "2.0"
