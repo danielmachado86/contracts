@@ -1,4 +1,4 @@
-// Package classification of Product API
+// Product API
 //
 // Documentation for Product API
 // Schemes: http
@@ -23,10 +23,22 @@ import (
 
 // A list of products in the response
 // swagger:response productsResponse
-type productsResponse struct {
+type productsResponseWrapper struct {
 	// All products in the system
-	// in: Body
+	// in: body
 	Body []data.Product
+}
+
+// swagger:parameters deleteProduct
+type productIDParameterWrapper struct {
+	// The id of the product to delete from the database
+	// in: path
+	// required: true
+	ID int `json:"id"`
+}
+
+// swagger:response noContent
+type productsNoContent struct {
 }
 
 type Products struct {

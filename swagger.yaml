@@ -3,12 +3,15 @@ consumes:
 - application/json
 definitions:
   Product:
+    description: Product defines the structure for an API product
     properties:
       description:
         type: string
         x-go-name: Description
       id:
+        description: the id for this user
         format: int64
+        minimum: 1
         type: integer
         x-go-name: ID
       name:
@@ -21,11 +24,13 @@ definitions:
       sku:
         type: string
         x-go-name: SKU
+    required:
+    - id
     type: object
     x-go-package: github.com/danielmachado86/contracts/data
 info:
   description: Documentation for Product API
-  title: of Product API
+  title: Product API
 paths:
   /products:
     get:
@@ -36,19 +41,34 @@ paths:
           $ref: '#/responses/productsResponse'
       tags:
       - products
+  /products/{ID}:
+    delete:
+      description: Delete product from database
+      operationId: deleteProduct
+      parameters:
+      - description: The id of the product to delete from the database
+        format: int64
+        in: path
+        name: id
+        required: true
+        type: integer
+        x-go-name: ID
+      responses:
+        "201":
+          $ref: '#/responses/noContent'
+      tags:
+      - products
 produces:
 - application/json
 responses:
+  noContent:
+    description: ""
   productsResponse:
     description: A list of products in the response
-    headers:
-      Body:
-        description: |-
-          All products in the system
-          in: Body
-        items:
-          $ref: '#/definitions/Product'
-        type: array
+    schema:
+      items:
+        $ref: '#/definitions/Product'
+      type: array
 schemes:
 - http
 swagger: "2.0"
