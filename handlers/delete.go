@@ -6,7 +6,13 @@ import (
 	"github.com/danielmachado86/contracts/data"
 )
 
-func (p *Products) DeleteProducts(rw http.ResponseWriter, r *http.Request) {
+// swagger:route DELETE /products/{ID} products deleteProduct
+// Delete product from database
+// responses:
+//  201: NoContent
+
+// DeleteProducts deletes a product from the database
+func (p *Products) DeleteProduct(rw http.ResponseWriter, r *http.Request) {
 
 	id := GetProductID(rw, r)
 

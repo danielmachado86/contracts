@@ -74,7 +74,7 @@ func DeleteProduct(id int) error {
 	if i == -1 {
 		return ErrProductNotFound
 	}
-	productList = append(productList[:i], productList[i+1])
+	productList = append(productList[:i], productList[i+1:]...)
 	return nil
 }
 
