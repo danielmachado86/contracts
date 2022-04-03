@@ -13,7 +13,7 @@ import (
 
 // GetProducts returns the products from the data store
 func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle GET Products")
+	p.l.Println("[DEBUG] Get list of records")
 
 	lp := data.GetProducts()
 	err := lp.ToJSON(rw)
