@@ -7,9 +7,10 @@ import (
 )
 
 func (p *Products) Update(rw http.ResponseWriter, r *http.Request) {
-	p.l.Println("Handle PUT Product")
 
 	prod := r.Context().Value(KeyProduct{}).(*data.Product)
+
+	p.l.Println("[DEBUG] deleting record id", prod.ID)
 
 	err := data.UpdateProduct(prod)
 	if err == data.ErrProductNotFound {
