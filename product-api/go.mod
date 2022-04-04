@@ -1,4 +1,4 @@
-module github.com/danielmachado86/contracts
+module github.com/danielmachado86/contracts/product-api
 
 go 1.18
 
