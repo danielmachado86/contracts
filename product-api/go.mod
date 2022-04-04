@@ -26,6 +26,8 @@ require (
 	github.com/go-playground/validator/v10 v10.10.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-swagger/go-swagger v0.29.0 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/uuid v1.1.2 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jessevdk/go-flags v1.5.0 // indirect
