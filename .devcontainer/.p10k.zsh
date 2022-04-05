@@ -35,6 +35,8 @@
     os_icon                 # os identifier
     dir                     # current directory
     vcs                     # git status
+    go_version
+    node_version
     # =========================[ Line #2 ]=========================
     newline                 # \n
     prompt_char             # prompt symbol
