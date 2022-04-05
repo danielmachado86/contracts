@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/danielmachado86/contracts/product-api/data"
+	"github.com/danielmachado86/contracts/data"
 )
 
 func (p Products) MiddlewareProductValidation(next http.Handler) http.Handler {

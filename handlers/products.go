@@ -17,7 +17,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/danielmachado86/contracts/product-api/data"
+	"github.com/danielmachado86/contracts/data"
 	"github.com/gorilla/mux"
 )
 
