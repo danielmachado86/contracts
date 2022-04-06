@@ -1,3 +1,4 @@
 go 1.18
 
 use ./product-api
+use ./product-images
