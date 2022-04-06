@@ -36,15 +36,9 @@ function App() {
         </Navbar.Collapse>
       </Navbar>
         <Routes>
-          <Route path="/admin">
-            <Admin/>
-          </Route>
-          <Route path="/">
-            <CoffeeList/>
-          </Route>
-          <Route>
-            <CoffeeList/>
-          </Route>
+          <Route path="/admin" element={<Admin/>} />
+          <Route path="/" element={<CoffeeList/>} />
+          <Route element={<CoffeeList/>} />
         </Routes>
         </div>
       </BrowserRouter>
