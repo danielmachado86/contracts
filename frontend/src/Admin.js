@@ -73,7 +73,7 @@ class Admin extends React.Component {
           <div>
           <h1 style={{marginBottom: "40px"}}>Admin</h1>
           <Container className="text-left">
-            <Form noValidate validated={this.validated} onSubmit={this.handleSubmit}>
+            <Form noValidate validated={this.validated()} onSubmit={this.handleSubmit}>
                   <Form.Group as={Row} controlId="productID">
                       <Form.Label column sm="2">Product ID:</Form.Label>
                       <Col sm="6">

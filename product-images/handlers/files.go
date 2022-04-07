@@ -63,4 +63,6 @@ func (f *Files) saveFile(id, path string, rw http.ResponseWriter, r io.ReadClose
 		f.log.Error("Unable to save file", "error", err)
 		http.Error(rw, "Unable to save file", http.StatusInternalServerError)
 	}
+	rw.WriteHeader(http.StatusOK)
+
 }

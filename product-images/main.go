@@ -10,6 +10,7 @@ import (
 
 	"github.com/danielmachado86/contracts/product-images/files"
 	"github.com/danielmachado86/contracts/product-images/handlers"
+	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/nicholasjackson/env"
@@ -38,6 +39,7 @@ func main() {
 	}
 
 	fh := handlers.NewFiles(stor, l)
+	mw := handlers.GzipHandler{}
 
 	sm := mux.NewRouter()
 
@@ -50,10 +52,13 @@ func main() {
 		"/images/{id:[0-9]+}/{filename:[a-zA-Z]+\\.[a-z]{3}}",
 		http.StripPrefix("/images/", http.FileServer(http.Dir(*basePath))),
 	)
+	gh.Use(mw.GzipMiddleware)
+
+	ch := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
 
 	s := http.Server{
 		Addr:         *bindAddress,
-		Handler:      sm,
+		Handler:      ch(sm),
 		ErrorLog:     sl,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
