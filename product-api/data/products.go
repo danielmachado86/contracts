@@ -42,10 +42,8 @@ func validateSKU(fl validator.FieldLevel) bool {
 	//sku is of format abc-absd-dfsdf
 	re := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
 	matches := re.FindAllString(fl.Field().String(), -1)
-	if len(matches) != 1 {
-		return false
-	}
-	return true
+
+	return len(matches) == 1
 }
 
 type Products []*Product
@@ -57,6 +55,14 @@ func (p *Products) ToJSON(w io.Writer) error {
 
 func GetProducts() Products {
 	return productList
+}
+
+func GetProductByID(id int) (*Product, error) {
+	i := findIndexByProductID(id)
+	if i == -1 {
+		return nil, ErrProductNotFound
+	}
+	return productList[i], nil
 }
 
 func AddProduct(p *Product) {

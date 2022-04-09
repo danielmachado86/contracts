@@ -4,7 +4,7 @@
 // - protoc             v3.12.4
 // source: protos/currency.proto
 
-package currency
+package protos
 
 import (
 	context "context"

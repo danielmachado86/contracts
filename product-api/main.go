@@ -8,20 +8,32 @@ import (
 	"os/signal"
 	"time"
 
+	protos "github.com/danielmachado86/contracts/currency/protos"
 	"github.com/danielmachado86/contracts/product-api/handlers"
 	"github.com/go-openapi/runtime/middleware"
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 	l := log.New(os.Stdout, "product-api ", log.LstdFlags)
-	ph := handlers.NewProducts(l)
+
+	conn, err := grpc.Dial("localhost:9092", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic("Error connecting with grpc server")
+	}
+
+	cc := protos.NewCurrencyClient(conn)
+
+	ph := handlers.NewProducts(l, cc)
 
 	sm := mux.NewRouter()
 
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
 	getRouter.HandleFunc("/products", ph.GetProducts)
+	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.GetProductByID)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
 	putRouter.HandleFunc("/{id:[0-9]+}", ph.Update)

@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/danielmachado86/contracts/currency/protos"
 	"github.com/danielmachado86/contracts/product-api/data"
 	"github.com/gorilla/mux"
 )
@@ -42,11 +43,12 @@ type productsNoContent struct {
 }
 
 type Products struct {
-	l *log.Logger
+	l  *log.Logger
+	cc protos.CurrencyClient
 }
 
-func NewProducts(l *log.Logger) *Products {
-	return &Products{l}
+func NewProducts(l *log.Logger, cc protos.CurrencyClient) *Products {
+	return &Products{l, cc}
 }
 
 type KeyProduct struct{}

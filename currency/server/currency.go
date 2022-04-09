@@ -9,13 +9,14 @@ import (
 
 type Currency struct {
 	log hclog.Logger
+	protos.UnimplementedCurrencyServer
 }
 
 func NewCurrency(l hclog.Logger) *Currency {
-	return &Currency{l}
+	return &Currency{log: l}
 }
 
-func (c *Currency) GetRate(ctx context.Context, rr *protoRateRequest) (*protos.RateResponse, error) {
+func (c *Currency) GetRate(ctx context.Context, rr *protos.RateRequest) (*protos.RateResponse, error) {
 
 	c.log.Info("Handle GetRate", "base", rr.GetBase(), "destination", rr.GetDestination)
 
