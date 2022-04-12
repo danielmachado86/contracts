@@ -7,15 +7,15 @@ import (
 )
 
 func TestStartDateRule(t *testing.T) {
-	var agreement = &Agreement{
+	var a = &Agreement{
 		params: map[string]Date{
 			"start_date_offset": {days: 0},
 		},
 	}
 
-	var contract = &Contract{
+	var c = &Contract{
 		Duration:  Date{months: 12},
-		Agreement: *agreement,
+		Agreement: *a,
 	}
 	tt := time.Now()
 	t_roundedToNextDay := time.Date(
@@ -28,9 +28,9 @@ func TestStartDateRule(t *testing.T) {
 	t_startDate := t_roundedToNextDay.AddDate(0, 0, 0)
 	t_task := Task{Date: t_startDate}
 
-	tm := &TaskManager{Contract: *contract}
-	rule := StartDateRule{}
-	task := rule.Calculate(tm)
+	tm := NewTaskManager()
+	r := StartDateRule{}
+	task := r.Calculate(tm, c)
 
 	if task.Date != t_task.Date {
 		t.Fail()
@@ -38,11 +38,11 @@ func TestStartDateRule(t *testing.T) {
 }
 
 func TestEndDateRule(t *testing.T) {
-	var agreement = &Agreement{}
+	var a = &Agreement{}
 
-	var contract = &Contract{
+	var c = &Contract{
 		Duration:  Date{months: 12},
-		Agreement: *agreement,
+		Agreement: *a,
 	}
 
 	tt := time.Now()
@@ -57,9 +57,9 @@ func TestEndDateRule(t *testing.T) {
 	t_endDate := t_startDate.AddDate(0, 12, 0)
 	t_task := Task{Date: t_endDate}
 
-	tm := &TaskManager{Contract: *contract}
+	tm := NewTaskManager()
 	rule := TerminationDateRule{}
-	task := rule.Calculate(tm)
+	task := rule.Calculate(tm, c)
 
 	if task.Date != t_task.Date {
 		t.Fail()
@@ -67,15 +67,15 @@ func TestEndDateRule(t *testing.T) {
 }
 
 func TestAdvanceNoticeRule(t *testing.T) {
-	var agreement = &Agreement{
+	var a = &Agreement{
 		params: map[string]Date{
 			"advance_notice_period": {months: 3},
 		},
 	}
 
-	var contract = &Contract{
+	var c = &Contract{
 		Duration:  Date{months: 12},
-		Agreement: *agreement,
+		Agreement: *a,
 	}
 	tt := time.Now()
 	t_roundedToNextDay := time.Date(
@@ -91,9 +91,9 @@ func TestAdvanceNoticeRule(t *testing.T) {
 	t_task := Task{Date: t_advanceNoticeDeadlineDate}
 	fmt.Printf("Date: %s \n", t_advanceNoticeDeadlineDate)
 
-	tm := &TaskManager{Contract: *contract}
+	tm := NewTaskManager()
 	rule := AdvanceNoticeDeadlineRule{}
-	task := rule.Calculate(tm)
+	task := rule.Calculate(tm, c)
 	fmt.Printf("Date: %s", task.Date)
 
 	if task.Date != t_task.Date {
@@ -102,37 +102,37 @@ func TestAdvanceNoticeRule(t *testing.T) {
 }
 
 func TestPaymentValueRule(t *testing.T) {
-	var agreement = &Agreement{
+	var a = &Agreement{
 		params: map[string]Date{
 			"payment_period": {months: 2},
 		},
 	}
 
-	var contract = &Contract{
+	var c = &Contract{
 		Duration:  Date{months: 13},
 		Price:     13,
-		Agreement: *agreement,
+		Agreement: *a,
 	}
 
-	pm := &PaymentManager{Contract: *contract}
+	pm := NewPaymentManager()
 	rule := PaymentValueRule{}
-	payments := rule.Calculate(pm)
+	rule.Calculate(pm, c)
 
-	if len(payments) != 7 {
+	if len(pm.Payments) != 7 {
 		t.Fail()
 	}
 
-	if payments[0].Value != float64(2) {
+	if pm.Payments[0].Value != float64(2) {
 		t.Fail()
 	}
 
-	if payments[len(payments)-1].Value != float64(1) {
+	if pm.Payments[len(pm.Payments)-1].Value != float64(1) {
 		t.Fail()
 	}
 }
 
-func TestSaveTaskRules(t *testing.T) {
-	var agreement = &Agreement{
+func TestSaveTask(t *testing.T) {
+	var a = &Agreement{
 		params: map[string]Date{
 			"start_date_offset":     {days: 0},
 			"advance_notice_period": {months: 3},
@@ -140,24 +140,21 @@ func TestSaveTaskRules(t *testing.T) {
 		},
 	}
 
-	var contract = &Contract{
+	var c = &Contract{
 		Duration:  Date{months: 12},
-		Agreement: *agreement,
+		Agreement: *a,
 	}
 
-	tm := &TaskManager{Contract: *contract}
+	tm := NewTaskManager()
 
-	signDateRule := &SignatureDateRule{}
-	signDateTask := signDateRule.Calculate(tm)
-	signDateTask.saveTask(tm)
+	signDate := &SignatureDateRule{}
+	signDate.Calculate(tm, c)
 
-	startDateRule := &StartDateRule{}
-	startDateTask := startDateRule.Calculate(tm)
-	startDateTask.saveTask(tm)
+	startDate := &StartDateRule{}
+	startDate.Calculate(tm, c)
 
 	advanceNoticeDeadlineRule := &AdvanceNoticeDeadlineRule{}
-	advanceNoticeTask := advanceNoticeDeadlineRule.Calculate(tm)
-	advanceNoticeTask.saveTask(tm)
+	advanceNoticeDeadlineRule.Calculate(tm, c)
 
 	if len(tm.Tasks) != 3 {
 		t.Fail()
@@ -165,5 +162,39 @@ func TestSaveTaskRules(t *testing.T) {
 
 	if tm.Tasks[len(tm.Tasks)-1].Name != "advance_notice_deadline" {
 		t.Fail()
+	}
+}
+
+func TestSavePayment(t *testing.T) {
+	var a = &Agreement{
+		params: map[string]Date{
+			"payment_period": {months: 2},
+		},
+	}
+
+	var c = &Contract{
+		Duration:  Date{months: 13},
+		Price:     13,
+		Agreement: *a,
+	}
+
+	pm := NewPaymentManager()
+
+	p1 := &PaymentValueRule{last: false}
+	p1.Calculate(pm, c)
+
+	p2 := &PaymentValueRule{last: true}
+	p2.Calculate(pm, c)
+
+	if len(pm.Payments) != 2 {
+		t.Error(fmt.Printf("The quantity of payments: %d is differerent to: %d", len(pm.Payments), 2))
+	}
+
+	if int(pm.Payments[0].Value) != 2 {
+		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(pm.Payments[0].Value), 2))
+	}
+
+	if int(pm.Payments[1].Value) != 1 {
+		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(pm.Payments[1].Value), 1))
 	}
 }
