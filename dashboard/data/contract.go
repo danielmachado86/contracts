@@ -1,186 +1,230 @@
 package data
 
-import "time"
+import (
+	"fmt"
+	"math"
+	"time"
+)
 
 type AgreementType int
+
+func roundDateToNextDay(t time.Time) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day()+1,
+		0, 0, 0, 0,
+		t.Location(),
+	)
+}
 
 const (
 	Rental AgreementType = iota
 )
 
+type PaymentRule interface {
+	Calculate(pm *PaymentManager) []Payment
+}
+type TaskRule interface {
+	Calculate(tm *TaskManager) Task
+}
+
+type SignatureDateRule struct {
+}
+
+func (sd *SignatureDateRule) Calculate(tm *TaskManager) Task {
+
+	tn := "contract_signature"
+
+	signDate := time.Now()
+
+	task := Task{Name: tn, Date: signDate}
+	return task
+}
+
+type StartDateRule struct {
+}
+
+func (sd *StartDateRule) Calculate(tm *TaskManager) Task {
+
+	tn := "contract_start"
+
+	offset := tm.Contract.Agreement.params["start_date_offset"]
+
+	rounded := roundDateToNextDay(time.Now())
+	startDate := rounded.AddDate(offset.years, offset.months, offset.days)
+
+	task := Task{Name: tn, Date: startDate}
+	return task
+}
+
+type TerminationDateRule struct {
+}
+
+func (ed *TerminationDateRule) Calculate(tm *TaskManager) Task {
+
+	tn := "contract_termination"
+	// tm.log.Info("Creating task: ", tn)
+
+	period := tm.Contract.Duration
+
+	startDateRule := &StartDateRule{}
+	startDateTask := startDateRule.Calculate(tm)
+	startDate := startDateTask.Date
+
+	terminationDate := startDate.AddDate(period.years, period.months, period.days)
+
+	task := Task{Name: tn, Date: terminationDate}
+	return task
+}
+
+type AdvanceNoticeDeadlineRule struct {
+}
+
+func (an *AdvanceNoticeDeadlineRule) Calculate(tm *TaskManager) Task {
+
+	tn := "advance_notice_deadline"
+	// tm.log.Info("Creating task: ", tn)
+
+	period := tm.Contract.Agreement.params["advance_notice_period"]
+
+	terminationDateRule := &TerminationDateRule{}
+	endDateTask := terminationDateRule.Calculate(tm)
+	endDate := endDateTask.Date
+
+	advanceNoticeDeadline := endDate.AddDate(-period.years, -period.months, -period.days)
+
+	task := Task{Name: tn, Date: advanceNoticeDeadline}
+	return task
+}
+
+type PaymentDeadlineRule struct {
+	payment int
+}
+
+func (sd *PaymentDeadlineRule) Calculate(tm *TaskManager) Task {
+
+	tn := fmt.Sprintf("payment %d", sd.payment)
+	// tm.log.Info("Creating task: ", tn)
+
+	params := tm.Contract.Agreement.params
+	offset := params["start_date_offset"]
+
+	rounded := roundDateToNextDay(time.Now())
+	startDate := rounded.AddDate(offset.years, offset.months, offset.days)
+	paymentDate := startDate.AddDate(0, params["payment_period"].months*sd.payment, 0)
+
+	task := Task{Name: tn, Date: paymentDate}
+	return task
+}
+
+type PaymentValueRule struct {
+}
+
+func (an *PaymentValueRule) Calculate(pm *PaymentManager) []Payment {
+
+	cValue := pm.Contract.Price
+	params := pm.Contract.Agreement.params
+
+	// Contract duration
+	cDuration := float64(pm.Contract.Duration.months)
+
+	// Period: Time between payments
+	pPeriod := float64(params["payment_period"].months)
+
+	// Payment per period unit
+	pValue := cValue / cDuration
+
+	// Number of payments calculated, using contract duration and period
+	var pNumber float64 = cDuration / pPeriod
+
+	// Number of payments rounded to lowest interger
+	pNumFloor := math.Floor(pNumber)
+
+	// Accumulated value of complete payments
+	pValWOResidue := pValue * pNumFloor * pPeriod
+
+	// Value of partial payment
+	residue := cValue - pValWOResidue
+
+	var paymentList []Payment
+	tm := &TaskManager{Contract: pm.Contract}
+	for i := 0; i <= int(pNumFloor)-1; i++ {
+		rule := PaymentDeadlineRule{payment: i}
+		task := rule.Calculate(tm)
+		payment := Payment{
+			Name:  "Payment",
+			Value: pValue * pPeriod,
+			Date:  task.Date,
+		}
+		paymentList = append(paymentList, payment)
+	}
+	if residue > 0 {
+		rule := PaymentDeadlineRule{payment: int(pNumFloor)}
+		task := rule.Calculate(tm)
+		paymentList = append(paymentList, Payment{Name: "Payment", Value: residue, Date: task.Date})
+	}
+
+	return paymentList
+}
+
 // Defines agreement parameters
-type AgreementManager struct {
-	Name string
-	Type AgreementType
+type Agreement struct {
+	Name   string
+	Type   AgreementType
+	params map[string]Date
+}
+
+type Date struct {
+	days   int
+	months int
+	years  int
 }
 
 // Defines contract structure
 type Contract struct {
-	ID        int
-	Duration  time.Duration
+	Duration  Date
 	Price     float64
-	Agreement AgreementManager
-}
-
-// Defines key dates
-type Scheduler struct {
-	Schedule []time.Time
+	Agreement Agreement
 }
 
 type Task struct {
 	Name string
+	Date time.Time
+}
+
+func (t Task) saveTask(tm *TaskManager) {
+	tm.Tasks = append(tm.Tasks, t)
 }
 
 // Defines activities and schedules
 type TaskManager struct {
-	ID       int
 	Contract Contract
-	Task     []Task
-	Schedule Scheduler
-}
-
-func AddTaskManager(tm *TaskManager) {
-	taskManagerList = append(taskManagerList, tm)
+	Tasks    []Task
 }
 
 type Payment struct {
-	Name  string
-	Value float64
+	Name   string
+	Remain float64
+	Value  float64
+	Date   time.Time
 }
 
-func AddPaymentManager(pm *PaymentManager) {
-	paymentManagerList = append(paymentManagerList, pm)
+func (p Payment) savePayment(pm *PaymentManager) {
+	pm.Payments = append(pm.Payments, p)
 }
 
 // Defines payments and schedules
 type PaymentManager struct {
-	ID       int
 	Contract Contract
-	Payment  []Payment
-	Schedule Scheduler
+	Payments []Payment
+	Schedule []time.Time
 }
 
 type Dashboard struct {
 	Contract Contract
-	Tasks    TaskManagers
-	Payments PaymentManagers
-}
-
-func GetDashboard(c *Contract) (*Dashboard, error) {
-
-	dashboard := &Dashboard{
-		Contract: *c,
-		Tasks:    taskManagerList,
-		Payments: paymentManagerList,
-	}
-
-	return dashboard, nil
 }
 
 type Contracts []*Contract
 type TaskManagers []*TaskManager
 type PaymentManagers []*PaymentManager
-
-var contractList = []*Contract{
-	{
-		ID:       1,
-		Duration: 31536000000000000,
-		Price:    24000000,
-		Agreement: AgreementManager{
-			Name: "Rental property",
-			Type: Rental,
-		},
-	},
-}
-
-var taskManagerList = []*TaskManager{
-	{
-		ID:       1,
-		Contract: *contractList[0],
-		Task: []Task{
-			{Name: "Contract signing"},
-			{Name: "Advance notice"},
-			{Name: "End"},
-		},
-		Schedule: Scheduler{
-			Schedule: []time.Time{
-				time.Now(),
-				time.Now().AddDate(0, 8, 0),
-				time.Now().AddDate(1, 0, 0),
-			},
-		},
-	},
-}
-
-var paymentManagerList = []*PaymentManager{
-	{
-		ID:       1,
-		Contract: *contractList[0],
-		Payment: []Payment{
-			{
-				Name:  "Payment 1",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 2",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 3",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 4",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 5",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 6",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 7",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 8",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 9",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 10",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 11",
-				Value: 2000000,
-			},
-			{
-				Name:  "Payment 12",
-				Value: 2000000,
-			},
-		},
-		Schedule: Scheduler{
-			Schedule: []time.Time{
-				time.Now().AddDate(0, 0, 5),
-				time.Now().AddDate(0, 1, 5),
-				time.Now().AddDate(0, 2, 5),
-				time.Now().AddDate(0, 3, 5),
-				time.Now().AddDate(0, 4, 5),
-				time.Now().AddDate(0, 5, 5),
-				time.Now().AddDate(0, 6, 5),
-				time.Now().AddDate(0, 7, 5),
-				time.Now().AddDate(0, 8, 5),
-				time.Now().AddDate(0, 9, 5),
-				time.Now().AddDate(0, 10, 5),
-				time.Now().AddDate(0, 11, 5),
-			},
-		},
-	},
-}
