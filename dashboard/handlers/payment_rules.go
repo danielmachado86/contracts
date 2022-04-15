@@ -5,14 +5,14 @@ import (
 )
 
 type PaymentRule interface {
-	Calculate(pm *data.PaymentManager, c *data.Contract) data.Payment
+	Calculate(pm *PaymentManager, c *data.Contract) data.Payment
 }
 
 type PaymentValueRule struct {
 	last bool
 }
 
-func (pr *PaymentValueRule) Calculate(pm *data.PaymentManager, c *data.Contract) *data.Payment {
+func (pr *PaymentValueRule) Calculate(pm *PaymentManager, c *data.Contract) *data.Payment {
 
 	pValue := pm.PaymentValue(c, pr.last)
 

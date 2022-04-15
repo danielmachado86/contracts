@@ -19,6 +19,10 @@ type Agreement struct {
 	Params map[string]*utils.Date
 }
 
+func NewAgreement(n string, a AgreementType, p map[string]*utils.Date) *Agreement {
+	return &Agreement{}
+}
+
 // Defines contract structure
 type Contract struct {
 	Duration  *utils.Date

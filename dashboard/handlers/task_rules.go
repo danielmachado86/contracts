@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/danielmachado86/contracts/dashboard/data/"
+	"github.com/danielmachado86/contracts/dashboard/data"
 )
 
 func roundDateToNextDay(t time.Time) time.Time {
@@ -18,13 +18,13 @@ func roundDateToNextDay(t time.Time) time.Time {
 }
 
 type TaskRule interface {
-	Calculate(tm *data.TaskManager, c *data.Contract) data.Task
+	Calculate(tm *TaskManager, c *data.Contract) data.Task
 }
 
 type SignatureDateRule struct {
 }
 
-func (tr *SignatureDateRule) Calculate(tm *data.TaskManager, c *data.Contract) *data.Task {
+func (tr *SignatureDateRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
 
 	tn := "contract_signature"
 
@@ -37,15 +37,14 @@ func (tr *SignatureDateRule) Calculate(tm *data.TaskManager, c *data.Contract) *
 type StartDateRule struct {
 }
 
-func (tr *StartDateRule) Calculate(tm *data.TaskManager, c *data.Contract) *data.Task {
-
-	tn := "contract_start"
+func (tr *StartDateRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
 
 	offset := c.Agreement.Params["start_date_offset"]
 
 	rounded := roundDateToNextDay(time.Now())
 	startDate := rounded.AddDate(offset.Years, offset.Months, offset.Days)
 
+	tn := "contract_start"
 	task := &data.Task{Name: tn, Date: startDate}
 	return task
 }
@@ -53,7 +52,7 @@ func (tr *StartDateRule) Calculate(tm *data.TaskManager, c *data.Contract) *data
 type TerminationDateRule struct {
 }
 
-func (tr *TerminationDateRule) Calculate(tm *data.TaskManager, c *data.Contract) *data.Task {
+func (tr *TerminationDateRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
 
 	tn := "contract_termination"
 
@@ -72,7 +71,7 @@ func (tr *TerminationDateRule) Calculate(tm *data.TaskManager, c *data.Contract)
 type AdvanceNoticeDeadlineRule struct {
 }
 
-func (tr *AdvanceNoticeDeadlineRule) Calculate(tm *data.TaskManager, c *data.Contract) *data.Task {
+func (tr *AdvanceNoticeDeadlineRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
 
 	tn := "advance_notice_deadline"
 
@@ -92,7 +91,7 @@ type PaymentDeadlineRule struct {
 	payment int
 }
 
-func (tr *PaymentDeadlineRule) Calculate(tm *data.TaskManager, c *data.Contract) *data.Task {
+func (tr *PaymentDeadlineRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
 
 	tn := fmt.Sprintf("payment %d", tr.payment)
 
