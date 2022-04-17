@@ -1,6 +1,6 @@
 package utils
 
-type Date struct {
+type Period struct {
 	Days   int
 	Months int
 	Years  int

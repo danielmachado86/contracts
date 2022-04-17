@@ -9,121 +9,91 @@ import (
 	"github.com/danielmachado86/contracts/dashboard/utils"
 )
 
-func TestStartDateRule(t *testing.T) {
-	var a = &data.Agreement{
-		Params: map[string]*utils.Date{
-			"start_date_offset": {Days: 0},
-		},
-	}
+func TestSignatureDateRule(t *testing.T) {
+	var c = &data.Contract{}
 
-	var c = &data.Contract{
-		Duration:  &utils.Date{Months: 12},
-		Agreement: a,
-	}
 	tt := time.Now()
+
+	r := SignatureDate{time: tt}
+	task := r.Run(c)
+
+	if task.GetDate() != tt {
+		t.Fail()
+	}
+}
+
+func TestStartDateRule(t *testing.T) {
+	var c = &data.Contract{}
+	tt := time.Now()
+	sr := SignatureDate{time: tt}
+	sd := sr.Run(c).GetDate()
 	t_roundedToNextDay := time.Date(
-		tt.Year(),
-		tt.Month(),
-		tt.Day()+1,
+		sd.Year(),
+		sd.Month(),
+		sd.Day()+1,
 		0, 0, 0, 0,
-		tt.Location(),
+		sd.Location(),
 	)
 	t_startDate := t_roundedToNextDay.AddDate(0, 0, 0)
-	t_task := &data.Task{Date: t_startDate}
 
-	tm := NewTaskManager()
-	r := StartDateRule{}
-	task := r.Calculate(tm, c)
+	r := StartDate{time: tt, offset: &utils.Period{Days: 0}}
+	task := r.Run(c)
 
-	if task.Date != t_task.Date {
+	if task.GetDate() != t_startDate {
 		t.Fail()
 	}
 }
 
 func TestEndDateRule(t *testing.T) {
-	var a = &data.Agreement{
-		Params: map[string]*utils.Date{
-			"start_date_offset": {Days: 0},
-		},
-	}
-
 	var c = &data.Contract{
-		Duration:  &utils.Date{Months: 12},
-		Agreement: a,
+		Duration: &utils.Period{Months: 12},
 	}
 
 	tt := time.Now()
-	t_roundedToNextDay := time.Date(
-		tt.Year(),
-		tt.Month(),
-		tt.Day()+1,
-		0, 0, 0, 0,
-		tt.Location(),
-	)
-	t_startDate := t_roundedToNextDay.AddDate(0, 0, 0)
+	sr := StartDate{time: tt, offset: &utils.Period{Days: 0}}
+	t_startDate := sr.Run(c).GetDate()
 	t_endDate := t_startDate.AddDate(0, 12, 0)
-	t_task := &data.Task{Date: t_endDate}
 
-	tm := NewTaskManager()
-	rule := TerminationDateRule{}
-	task := rule.Calculate(tm, c)
+	rule := EndDate{time: tt, offset: &utils.Period{Days: 0}}
+	task := rule.Run(c)
 
-	if task.Date != t_task.Date {
+	if task.GetDate() != t_endDate {
 		t.Fail()
 	}
 }
 
 func TestAdvanceNoticeRule(t *testing.T) {
-	var a = &data.Agreement{
-		Params: map[string]*utils.Date{
-			"start_date_offset":     {Days: 0},
-			"advance_notice_period": {Months: 3},
-		},
-	}
-
 	var c = &data.Contract{
-		Duration:  &utils.Date{Months: 12},
-		Agreement: a,
+		Duration: &utils.Period{Months: 12},
 	}
 	tt := time.Now()
-	t_roundedToNextDay := time.Date(
-		tt.Year(),
-		tt.Month(),
-		tt.Day()+1,
-		0, 0, 0, 0,
-		tt.Location(),
-	)
-	t_startDate := t_roundedToNextDay.AddDate(0, 0, 0)
-	t_endDate := t_startDate.AddDate(0, 12, 0)
+	er := EndDate{time: tt, offset: &utils.Period{Days: 0}}
+	t_endDate := er.Run(c).GetDate()
 	t_advanceNoticeDeadlineDate := t_endDate.AddDate(0, -3, 0)
-	t_task := data.Task{Date: t_advanceNoticeDeadlineDate}
-	fmt.Printf("Date: %s \n", t_advanceNoticeDeadlineDate)
 
-	tm := NewTaskManager()
-	rule := AdvanceNoticeDeadlineRule{}
-	task := rule.Calculate(tm, c)
-	fmt.Printf("Date: %s", task.Date)
+	rule := AdvanceNoticeDeadline{time: tt, offset: &utils.Period{Days: 0}, period: &utils.Period{Months: 3}}
+	task := rule.Run(c)
 
-	if task.Date != t_task.Date {
+	if task.GetDate() != t_advanceNoticeDeadlineDate {
 		t.Fail()
 	}
 }
 
 func TestPaymentQuantity(t *testing.T) {
-	var a = &data.Agreement{
-		Params: map[string]*utils.Date{
+	var a = &data.ContractTemplate{
+		Params: map[string]*utils.Period{
 			"payment_period": {Months: 2},
 		},
 	}
 
 	var c = &data.Contract{
-		Duration:  &utils.Date{Months: 13},
-		Price:     13,
-		Agreement: a,
+		Duration: &utils.Period{Months: 13},
+		Price:    13,
+		Template: a,
 	}
 
-	pm := NewPaymentManager()
-	qty := pm.PaymentQuantity(c)
+	pr := &PaymentValue{period: &utils.Period{Months: 2}}
+	qty := pr.PeriodicPaymentQuantity(c)
 	tQty := 7
 
 	if qty != tQty {
@@ -132,32 +102,41 @@ func TestPaymentQuantity(t *testing.T) {
 
 }
 
-func TestSavePayment(t *testing.T) {
-	var a = &data.Agreement{
-		Params: map[string]*utils.Date{
+func TestPaymentValue(t *testing.T) {
+	var a = &data.ContractTemplate{
+		Params: map[string]*utils.Period{
 			"payment_period": {Months: 5},
 		},
 	}
 
 	var c = &data.Contract{
-		Duration:  &utils.Date{Months: 12},
-		Price:     24,
-		Agreement: a,
+		Duration: &utils.Period{Months: 12},
+		Price:    24,
+		Template: a,
 	}
 
-	pm := NewPaymentManager()
+	// Payment Quantity: 3
+	// Last payment value: 4
+	// Ordinary payment value: 10
 
-	r1 := &PaymentValueRule{last: false}
-	p1 := r1.Calculate(pm, c)
+	t.Run("Test ordinary payment value", func(t *testing.T) {
 
-	if int(p1.Value) != 10 {
-		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(p1.Value), 5))
-	}
+		r1 := &PaymentValue{last: false, period: &utils.Period{Months: 5}}
+		p1 := r1.Run(c)
 
-	r2 := &PaymentValueRule{last: true}
-	p2 := r2.Calculate(pm, c)
+		if int(p1.GetValue()) != 10 {
+			t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(p1.GetValue()), 5))
+		}
 
-	if int(p2.Value) != 4 {
-		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(p2.Value), 8))
-	}
+	})
+
+	t.Run("Test last payment (residual) value", func(t *testing.T) {
+		r2 := &PaymentValue{last: true, period: &utils.Period{Months: 5}}
+		p2 := r2.Run(c)
+
+		if int(p2.GetValue()) != 4 {
+			t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(p2.GetValue()), 8))
+		}
+
+	})
 }

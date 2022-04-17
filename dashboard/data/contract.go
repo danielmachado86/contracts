@@ -6,40 +6,40 @@ import (
 	"github.com/danielmachado86/contracts/dashboard/utils"
 )
 
-type AgreementType int
+type TemplateType int
 
 const (
-	Rental AgreementType = iota
+	Rental TemplateType = iota
 )
 
 // Defines agreement parameters
-type Agreement struct {
+type ContractTemplate struct {
 	Name   string
-	Type   AgreementType
-	Params map[string]*utils.Date
-}
-
-func NewAgreement(n string, a AgreementType, p map[string]*utils.Date) *Agreement {
-	return &Agreement{}
+	Type   TemplateType
+	Params map[string]*utils.Period
 }
 
 // Defines contract structure
 type Contract struct {
-	Duration  *utils.Date
-	Price     float64
-	Agreement *Agreement
+	Duration *utils.Period
+	Price    float64
+	Template *ContractTemplate
 }
-
-type Contracts []*Contract
 
 type Task struct {
 	Name string
 	Date time.Time
 }
 
+func (t *Task) GetDate() time.Time {
+	return t.Date
+}
+
 type Payment struct {
-	Name   string
-	Remain float64
-	Value  float64
-	Date   time.Time
+	Name  string
+	Value float64
+}
+
+func (p *Payment) GetValue() float64 {
+	return p.Value
 }

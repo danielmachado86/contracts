@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/danielmachado86/contracts/dashboard/data"
+	"github.com/danielmachado86/contracts/dashboard/utils"
 )
 
-func roundDateToNextDay(t time.Time) time.Time {
+func roundDateToNextDay(s Scheduler) time.Time {
+	t := s.GetDate()
 	return time.Date(
 		t.Year(),
 		t.Month(),
@@ -17,91 +19,94 @@ func roundDateToNextDay(t time.Time) time.Time {
 	)
 }
 
-type TaskRule interface {
-	Calculate(tm *TaskManager, c *data.Contract) data.Task
+type SignatureDate struct {
+	time time.Time
 }
 
-type SignatureDateRule struct {
+func createTask(n string, d time.Time) *data.Task {
+	return &data.Task{Name: n, Date: d}
 }
 
-func (tr *SignatureDateRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
-
-	tn := "contract_signature"
-
-	signDate := time.Now()
-
-	task := &data.Task{Name: tn, Date: signDate}
-	return task
+func addDate(r ScheduleRuleManager, p *utils.Period, c *data.Contract) time.Time {
+	// Start date
+	d := r.Run(c).GetDate()
+	// Termination date
+	return d.AddDate(p.Years, p.Months, p.Days)
 }
 
-type StartDateRule struct {
+func (r SignatureDate) Run(c *data.Contract) Scheduler {
+	return createTask("signature_date", r.time)
 }
 
-func (tr *StartDateRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
-
-	offset := c.Agreement.Params["start_date_offset"]
-
-	rounded := roundDateToNextDay(time.Now())
-	startDate := rounded.AddDate(offset.Years, offset.Months, offset.Days)
-
-	tn := "contract_start"
-	task := &data.Task{Name: tn, Date: startDate}
-	return task
+type StartDate struct {
+	time   time.Time
+	offset *utils.Period
 }
 
-type TerminationDateRule struct {
+func (r StartDate) Run(c *data.Contract) Scheduler {
+
+	sr := &SignatureDate{time: r.time}
+	o := r.offset
+
+	rounded := roundDateToNextDay(sr.Run(c))
+	sd := rounded.AddDate(o.Years, o.Months, o.Days)
+
+	return createTask("start_date", sd)
 }
 
-func (tr *TerminationDateRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
-
-	tn := "contract_termination"
-
-	cDuraion := c.Duration
-
-	startDateRule := &StartDateRule{}
-	startDateTask := startDateRule.Calculate(tm, c)
-	startDate := startDateTask.Date
-
-	terminationDate := startDate.AddDate(cDuraion.Years, cDuraion.Months, cDuraion.Days)
-
-	task := &data.Task{Name: tn, Date: terminationDate}
-	return task
+type EndDate struct {
+	time   time.Time
+	offset *utils.Period
 }
 
-type AdvanceNoticeDeadlineRule struct {
+func (r EndDate) Run(c *data.Contract) Scheduler {
+
+	d := c.Duration
+
+	// Start rule
+	sr := &StartDate{
+		offset: r.offset,
+		time:   r.time,
+	}
+	// Termination date
+	td := addDate(sr, d, c)
+
+	return createTask("end_date", td)
 }
 
-func (tr *AdvanceNoticeDeadlineRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
-
-	tn := "advance_notice_deadline"
-
-	period := c.Agreement.Params["advance_notice_period"]
-
-	terminationDateRule := &TerminationDateRule{}
-	endDateTask := terminationDateRule.Calculate(tm, c)
-	endDate := endDateTask.Date
-
-	advanceNoticeDeadline := endDate.AddDate(-period.Years, -period.Months, -period.Days)
-
-	task := &data.Task{Name: tn, Date: advanceNoticeDeadline}
-	return task
+type AdvanceNoticeDeadline struct {
+	time   time.Time
+	offset *utils.Period
+	period *utils.Period
 }
 
-type PaymentDeadlineRule struct {
+func (r AdvanceNoticeDeadline) Run(c *data.Contract) Scheduler {
+
+	// Period
+	p := r.period
+
+	// End date rule
+	er := &EndDate{offset: r.offset, time: r.time}
+	// End date
+	ed := er.Run(c).GetDate()
+	// Advance notice deadline
+	nd := ed.AddDate(-p.Years, -p.Months, -p.Days)
+
+	return createTask("advance_notice_deadline", nd)
+}
+
+type PaymentDeadline struct {
+	offset  *utils.Period
+	time    time.Time
+	period  *utils.Period
 	payment int
 }
 
-func (tr *PaymentDeadlineRule) Calculate(tm *TaskManager, c *data.Contract) *data.Task {
+func (r PaymentDeadline) Run(c *data.Contract) Scheduler {
 
-	tn := fmt.Sprintf("payment %d", tr.payment)
+	sr := &StartDate{offset: r.offset, time: r.time}
+	//Payment deadline date
+	pd := addDate(sr, r.period, c)
 
-	params := c.Agreement.Params
-	offset := params["start_date_offset"]
-
-	rounded := roundDateToNextDay(time.Now())
-	startDate := rounded.AddDate(offset.Years, offset.Months, offset.Days)
-	paymentDate := startDate.AddDate(0, params["payment_period"].Months*tr.payment, 0)
-
-	task := &data.Task{Name: tn, Date: paymentDate}
-	return task
+	return createTask(fmt.Sprintf("payment %d", r.payment), pd)
 }
