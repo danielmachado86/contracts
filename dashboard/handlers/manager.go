@@ -1,22 +1,27 @@
 package handlers
 
 import (
-	"time"
-
 	"github.com/danielmachado86/contracts/dashboard/data"
 )
 
 type ScheduleRuleManager interface {
-	Run(*data.Contract) Scheduler
+	Run() *data.Task
+	Save() *data.Task
 }
+
 type PaymentRuleManager interface {
-	Run(*data.Contract) Calculator
+	Run() *data.Payment
+	Save() *data.Payment
 }
 
-type Scheduler interface {
-	GetDate() time.Time
+var ScheduleRules = map[string]ScheduleRuleManager{
+	"signature_date":          SignatureDate{},
+	"start_date":              StartDate{},
+	"end_date":                EndDate{},
+	"advance_notice_deadline": AdvanceNoticeDeadline{},
 }
 
-type Calculator interface {
-	GetValue() float64
+var PaymentRules = map[string]PaymentRuleManager{
+	"periodic_payment": PeriodicPaymentValue{},
+	"termination":      TerminationValue{},
 }

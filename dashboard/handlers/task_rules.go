@@ -5,11 +5,9 @@ import (
 	"time"
 
 	"github.com/danielmachado86/contracts/dashboard/data"
-	"github.com/danielmachado86/contracts/dashboard/utils"
 )
 
-func roundDateToNextDay(s Scheduler) time.Time {
-	t := s.GetDate()
+func roundDateToNextDay(t time.Time) time.Time {
 	return time.Date(
 		t.Year(),
 		t.Month(),
@@ -19,94 +17,139 @@ func roundDateToNextDay(s Scheduler) time.Time {
 	)
 }
 
+func createTask(n string, d time.Time) *data.Task {
+	t := &data.Task{Name: n, Date: d}
+	return t
+}
+
 type SignatureDate struct {
 	time time.Time
 }
 
-func createTask(n string, d time.Time) *data.Task {
-	return &data.Task{Name: n, Date: d}
-}
-
-func addDate(r ScheduleRuleManager, p *utils.Period, c *data.Contract) time.Time {
-	// Start date
-	d := r.Run(c).GetDate()
-	// Termination date
-	return d.AddDate(p.Years, p.Months, p.Days)
-}
-
-func (r SignatureDate) Run(c *data.Contract) Scheduler {
+func (r SignatureDate) Run() *data.Task {
 	return createTask("signature_date", r.time)
+}
+
+func (r SignatureDate) Save() *data.Task {
+	return r.Run().Save()
 }
 
 type StartDate struct {
 	time   time.Time
-	offset *utils.Period
+	params data.Params
 }
 
-func (r StartDate) Run(c *data.Contract) Scheduler {
+func (r StartDate) Run() *data.Task {
+
+	params := r.params
 
 	sr := &SignatureDate{time: r.time}
-	o := r.offset
+	o := params.Offset
 
-	rounded := roundDateToNextDay(sr.Run(c))
+	rounded := roundDateToNextDay(sr.Run().GetDate())
 	sd := rounded.AddDate(o.Years, o.Months, o.Days)
 
 	return createTask("start_date", sd)
 }
 
-type EndDate struct {
-	time   time.Time
-	offset *utils.Period
+func (r StartDate) Save() *data.Task {
+	return r.Run().Save()
 }
 
-func (r EndDate) Run(c *data.Contract) Scheduler {
+type EndDate struct {
+	time   time.Time
+	params data.Params
+}
 
-	d := c.Duration
+func (r EndDate) Run() *data.Task {
+
+	params := r.params
+
+	d := params.Duration
 
 	// Start rule
 	sr := &StartDate{
-		offset: r.offset,
 		time:   r.time,
+		params: r.params,
 	}
 	// Termination date
-	td := addDate(sr, d, c)
+	td := sr.Run().AddPeriod(d)
 
 	return createTask("end_date", td)
 }
 
-type AdvanceNoticeDeadline struct {
-	time   time.Time
-	offset *utils.Period
-	period *utils.Period
+func (r EndDate) Save() *data.Task {
+	return r.Run().Save()
 }
 
-func (r AdvanceNoticeDeadline) Run(c *data.Contract) Scheduler {
+type AdvanceNoticeDeadline struct {
+	time   time.Time
+	params data.Params
+}
+
+func (r AdvanceNoticeDeadline) Run() *data.Task {
+
+	params := r.params
 
 	// Period
-	p := r.period
+	p := params.PeriodAN
 
 	// End date rule
-	er := &EndDate{offset: r.offset, time: r.time}
+	er := &EndDate{time: r.time, params: params}
 	// End date
-	ed := er.Run(c).GetDate()
+	ed := er.Run().GetDate()
 	// Advance notice deadline
 	nd := ed.AddDate(-p.Years, -p.Months, -p.Days)
 
 	return createTask("advance_notice_deadline", nd)
 }
 
-type PaymentDeadline struct {
-	offset  *utils.Period
-	time    time.Time
-	period  *utils.Period
-	payment int
+func (r AdvanceNoticeDeadline) Save() *data.Task {
+	return r.Run().Save()
 }
 
-func (r PaymentDeadline) Run(c *data.Contract) Scheduler {
+type PeriodicPaymentClosingDate struct {
+	time    time.Time
+	params  data.Params
+	payment int
+	dueDate *PaymentDueDate
+}
 
-	sr := &StartDate{offset: r.offset, time: r.time}
-	//Payment deadline date
-	pd := addDate(sr, r.period, c)
+func (r PeriodicPaymentClosingDate) Run() *data.Task {
 
-	return createTask(fmt.Sprintf("payment %d", r.payment), pd)
+	params := r.params
+
+	sr := &StartDate{time: r.time, params: params}
+
+	p := params.PaymentPeriod
+	p.Months = p.Months * r.payment
+
+	//Payment closing date
+	pd := sr.Run().AddPeriod(p)
+
+	r.dueDate = &PaymentDueDate{time: pd, name: fmt.Sprintf("due_date_%d", r.payment)}
+
+	return createTask(fmt.Sprintf("closing_date_%d", r.payment), pd)
+}
+
+func (r PeriodicPaymentClosingDate) Save() *data.Task {
+	r.dueDate.Save()
+	return r.Run().Save()
+}
+
+type PaymentDueDate struct {
+	name string
+	time time.Time
+}
+
+func (r PaymentDueDate) Run() *data.Task {
+
+	//Payment closing date
+	pd := r.time.AddDate(0, 0, 5)
+
+	return createTask(r.name, pd)
+}
+
+func (r PaymentDueDate) Save() *data.Task {
+	return r.Run().Save()
 }
