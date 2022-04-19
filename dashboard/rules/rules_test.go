@@ -1,4 +1,4 @@
-package handlers
+package rules
 
 import (
 	"fmt"
@@ -97,7 +97,7 @@ func TestPaymentValue(t *testing.T) {
 
 	t.Run("Test ordinary payment value", func(t *testing.T) {
 
-		r1 := &PeriodicPaymentValue{
+		r1 := &PeriodicPayment{
 			time:          tt,
 			params:        params,
 			paymentNumber: 1,
@@ -111,7 +111,7 @@ func TestPaymentValue(t *testing.T) {
 	})
 
 	t.Run("Test last payment (residual) value", func(t *testing.T) {
-		r2 := &PeriodicPaymentValue{
+		r2 := &PeriodicPayment{
 			time:          tt,
 			params:        params,
 			paymentNumber: 3,

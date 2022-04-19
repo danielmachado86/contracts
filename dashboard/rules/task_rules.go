@@ -1,4 +1,4 @@
-package handlers
+package rules
 
 import (
 	"fmt"
@@ -112,7 +112,6 @@ type PeriodicPaymentClosingDate struct {
 	time    time.Time
 	params  data.Params
 	payment int
-	dueDate *PaymentDueDate
 }
 
 func (r PeriodicPaymentClosingDate) Run() *data.Task {
@@ -127,13 +126,10 @@ func (r PeriodicPaymentClosingDate) Run() *data.Task {
 	//Payment closing date
 	pd := sr.Run().AddPeriod(p)
 
-	r.dueDate = &PaymentDueDate{time: pd, name: fmt.Sprintf("due_date_%d", r.payment)}
-
 	return createTask(fmt.Sprintf("closing_date_%d", r.payment), pd)
 }
 
 func (r PeriodicPaymentClosingDate) Save() *data.Task {
-	r.dueDate.Save()
 	return r.Run().Save()
 }
 
@@ -147,7 +143,7 @@ func (r PaymentDueDate) Run() *data.Task {
 	//Payment closing date
 	pd := r.time.AddDate(0, 0, 5)
 
-	return createTask(r.name, pd)
+	return createTask(fmt.Sprintf("%s_due_date", r.name), pd)
 }
 
 func (r PaymentDueDate) Save() *data.Task {

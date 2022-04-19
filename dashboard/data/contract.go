@@ -66,15 +66,11 @@ func NewContractTemplate(n string, t TemplateType, p *Params, sr []string, pr []
 }
 
 // Defines contract structure
-type contract struct {
+type Contract struct {
 	Attributes map[string]interface{}
 }
 
-func NewContract() *contract {
-	return &contract{}
-}
-
-var Contract = NewContract()
+var contract = &Contract{}
 
 type Task struct {
 	Name string
@@ -93,7 +89,7 @@ func (t *Task) GetDate() time.Time {
 }
 
 func (t *Task) Save() *Task {
-	Contract.Attributes[t.Name] = t
+	contract.Attributes[t.Name] = t
 	return t
 }
 
@@ -108,6 +104,6 @@ func (p *Payment) GetValue() float64 {
 }
 
 func (p *Payment) Save() *Payment {
-	Contract.Attributes[p.Name] = p
+	contract.Attributes[p.Name] = p
 	return p
 }
