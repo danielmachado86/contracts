@@ -35,13 +35,12 @@ func (r SignatureDate) Save() *data.Task {
 }
 
 type StartDate struct {
-	time   time.Time
-	params data.Params
+	time time.Time
 }
 
 func (r StartDate) Run() *data.Task {
 
-	params := r.params
+	params := data.GetParams()
 
 	sr := &SignatureDate{time: r.time}
 	o := params.Offset
@@ -57,20 +56,18 @@ func (r StartDate) Save() *data.Task {
 }
 
 type EndDate struct {
-	time   time.Time
-	params data.Params
+	time time.Time
 }
 
 func (r EndDate) Run() *data.Task {
 
-	params := r.params
+	params := data.GetParams()
 
 	d := params.Duration
 
 	// Start rule
 	sr := &StartDate{
-		time:   r.time,
-		params: r.params,
+		time: r.time,
 	}
 	// Termination date
 	td := sr.Run().AddPeriod(d)
@@ -83,19 +80,18 @@ func (r EndDate) Save() *data.Task {
 }
 
 type AdvanceNoticeDeadline struct {
-	time   time.Time
-	params data.Params
+	time time.Time
 }
 
 func (r AdvanceNoticeDeadline) Run() *data.Task {
 
-	params := r.params
+	params := data.GetParams()
 
 	// Period
 	p := params.PeriodAN
 
 	// End date rule
-	er := &EndDate{time: r.time, params: params}
+	er := &EndDate{time: r.time}
 	// End date
 	ed := er.Run().GetDate()
 	// Advance notice deadline
@@ -110,15 +106,14 @@ func (r AdvanceNoticeDeadline) Save() *data.Task {
 
 type PeriodicPaymentClosingDate struct {
 	time    time.Time
-	params  data.Params
 	payment int
 }
 
 func (r PeriodicPaymentClosingDate) Run() *data.Task {
 
-	params := r.params
+	params := data.GetParams()
 
-	sr := &StartDate{time: r.time, params: params}
+	sr := &StartDate{time: r.time}
 
 	p := params.PaymentPeriod
 	p.Months = p.Months * r.payment

@@ -70,7 +70,11 @@ type Contract struct {
 	Attributes map[string]interface{}
 }
 
-var contract = &Contract{}
+type attributes map[string]interface{}
+
+func GetAttributes() map[string]interface{} {
+	return make(attributes)
+}
 
 type Task struct {
 	Name string
@@ -89,7 +93,8 @@ func (t *Task) GetDate() time.Time {
 }
 
 func (t *Task) Save() *Task {
-	contract.Attributes[t.Name] = t
+	attributes := GetAttributes()
+	attributes[t.Name] = t
 	return t
 }
 
@@ -104,6 +109,7 @@ func (p *Payment) GetValue() float64 {
 }
 
 func (p *Payment) Save() *Payment {
-	contract.Attributes[p.Name] = p
+	attributes := GetAttributes()
+	attributes[p.Name] = p
 	return p
 }

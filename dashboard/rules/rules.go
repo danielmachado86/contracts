@@ -14,14 +14,15 @@ type PaymentRule interface {
 	Save() *data.Payment
 }
 
-var ScheduleRules = map[string]ScheduleRule{
-	"signature_date":          SignatureDate{},
-	"start_date":              StartDate{},
-	"end_date":                EndDate{},
-	"advance_notice_deadline": AdvanceNoticeDeadline{},
+type PaymentManager interface {
+	Configure()
+	Execute()
 }
 
-var PaymentRules = map[string]PaymentRule{
-	"periodic_payment": PeriodicPayment{},
-	"termination":      Termination{},
+type PaymentGroup struct {
+	PaymentRuleList []PaymentRule
+}
+
+func NewPaymentGroup() PaymentGroup {
+	return PaymentGroup{}
 }
