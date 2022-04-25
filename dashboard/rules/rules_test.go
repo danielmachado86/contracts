@@ -89,7 +89,7 @@ func TestPaymentValue(t *testing.T) {
 
 	t.Run("Test ordinary payment value", func(t *testing.T) {
 
-		r1 := &PeriodicPayment{time: tt}
+		r1 := &PeriodicPayment{}
 		p1 := r1.Run()
 
 		if p1.Value != 24 {

@@ -53,7 +53,7 @@ type PeriodicPayment struct {
 func (r PeriodicPayment) Configure() *PaymentGroup {
 
 	pq := r.PeriodicPaymentQuantity()
-	pg := &PaymentGroup{}
+	pg := NewPaymentGroup()
 	for i := 1; i <= pq; i++ {
 		n := fmt.Sprintf("periodic_payment_%d", i)
 		v := r.PeriodicPaymentValue(i, pq)
