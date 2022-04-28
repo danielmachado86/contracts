@@ -10,68 +10,81 @@ import (
 
 func createPayment(n string, v float64, t time.Time) *data.Payment {
 	tr := &PaymentDueDate{time: t, name: n}
-	tt := tr.Run()
-	return &data.Payment{Name: n, Value: v, Task: tt.Save()}
+	tr.Compute().Save()
+	return &data.Payment{Name: n, Value: v, Task: tr.task}
 }
 
 type Termination struct {
-	time time.Time
+	time    time.Time
+	payment *data.Payment
 }
 
-func (r Termination) Run() *data.Payment {
+func (r *Termination) Compute() Rule {
 
 	params := data.GetParams()
 
-	n := "Penalty payment"
+	n := "penalty_payment"
 	pp := &PeriodicPayment{}
 	v := pp.PeriodicPaymentValue(1, 1) * float64(params.Penalty.Months)
-
-	return createPayment(n, v, r.time)
+	r.payment = createPayment(n, v, r.time)
+	return r
 }
 
-func (r Termination) Save() *data.Payment {
-	return r.Run().Save()
+func (r *Termination) Save() {
+	r.payment.Save()
 }
 
 type Payment struct {
-	time  time.Time
-	value float64
-	name  string
+	time    time.Time
+	value   float64
+	name    string
+	payment *data.Payment
 }
 
-func (r Payment) Run() *data.Payment {
-	return createPayment(r.name, r.value, r.time)
+func (r *Payment) Compute() Rule {
+	r.payment = createPayment(r.name, r.value, r.time)
+	return r
 }
 
-func (r Payment) Save() *data.Payment {
-	return r.Run().Save()
+type PaymentGroup struct {
+	PaymentRuleList []Rule
+}
+
+func NewPaymentGroup() *PaymentGroup {
+	return &PaymentGroup{}
+}
+
+func (r *Payment) Save() {
+	r.payment.Save()
 }
 
 type PeriodicPayment struct {
+	group *PaymentGroup
 }
 
-func (r PeriodicPayment) Configure() *PaymentGroup {
+func (r *PeriodicPayment) Compute() Rule {
 
 	pq := r.PeriodicPaymentQuantity()
 	pg := NewPaymentGroup()
 	for i := 1; i <= pq; i++ {
 		n := fmt.Sprintf("periodic_payment_%d", i)
 		v := r.PeriodicPaymentValue(i, pq)
-		pr := Payment{name: n, value: v}
+		pr := &Payment{name: n, value: v}
 
 		pg.PaymentRuleList = append(pg.PaymentRuleList, pr)
 	}
-	return pg
+	r.group = pg
+	return r
 }
 
-func (r PeriodicPayment) Execute() {
-	rules := r.Configure()
+func (r *PeriodicPayment) Save() {
+	rules := r.group
 	for _, rule := range rules.PaymentRuleList {
-		rule.Run()
+		rule.Compute().Save()
 	}
 }
 
-func (r PeriodicPayment) PeriodicPaymentQuantity() int {
+func (r *PeriodicPayment) PeriodicPaymentQuantity() int {
 
 	params := data.GetParams()
 
@@ -87,7 +100,7 @@ func (r PeriodicPayment) PeriodicPaymentQuantity() int {
 	return int(n)
 }
 
-func (r PeriodicPayment) residualPayment() float64 {
+func (r *PeriodicPayment) residualPayment() float64 {
 	params := data.GetParams()
 
 	// Period: Time between payments
@@ -99,7 +112,7 @@ func (r PeriodicPayment) residualPayment() float64 {
 
 }
 
-func (r PeriodicPayment) PeriodicPaymentValue(pn int, pq int) float64 {
+func (r *PeriodicPayment) PeriodicPaymentValue(pn int, pq int) float64 {
 
 	params := data.GetParams()
 

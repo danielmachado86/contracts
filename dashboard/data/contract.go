@@ -70,32 +70,34 @@ type Contract struct {
 	Attributes map[string]interface{}
 }
 
-type attributes map[string]interface{}
-
-func GetAttributes() map[string]interface{} {
-	return make(attributes)
+func (c *Contract) GetAttributes() map[string]interface{} {
+	return c.Attributes
 }
+
+func NewContract() *Contract {
+	return &Contract{Attributes: make(map[string]interface{})}
+}
+
+var ContractInst = NewContract()
 
 type Task struct {
 	Name string
 	Date time.Time
 }
 
-func (t *Task) AddPeriod(p *utils.Period) time.Time {
+func (t Task) AddPeriod(p *utils.Period) time.Time {
 	// Start date
 	d := t.GetDate()
 	// Termination date
 	return d.AddDate(p.Years, p.Months, p.Days)
 }
 
-func (t *Task) GetDate() time.Time {
+func (t Task) GetDate() time.Time {
 	return t.Date
 }
 
-func (t *Task) Save() *Task {
-	attributes := GetAttributes()
-	attributes[t.Name] = t
-	return t
+func (t Task) Save() {
+	ContractInst.Attributes[t.Name] = t
 }
 
 type Payment struct {
@@ -108,8 +110,6 @@ func (p *Payment) GetValue() float64 {
 	return p.Value
 }
 
-func (p *Payment) Save() *Payment {
-	attributes := GetAttributes()
-	attributes[p.Name] = p
-	return p
+func (p *Payment) Save() {
+	ContractInst.Attributes[p.Name] = p
 }

@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/danielmachado86/contracts/dashboard/data"
 )
 
 func TestSignatureDateRule(t *testing.T) {
 	tt := time.Now()
 
 	r := SignatureDate{time: tt}
-	task := r.Run()
+	r.Compute()
 
-	if task.GetDate() != tt {
+	if r.task.GetDate() != tt {
 		t.Fail()
 	}
 }
@@ -20,7 +22,8 @@ func TestSignatureDateRule(t *testing.T) {
 func TestStartDateRule(t *testing.T) {
 	tt := time.Now()
 	sr := SignatureDate{time: tt}
-	sd := sr.Run().GetDate()
+	sr.Compute()
+	sd := sr.task.GetDate()
 	t_roundedToNextDay := time.Date(
 		sd.Year(),
 		sd.Month(),
@@ -31,9 +34,9 @@ func TestStartDateRule(t *testing.T) {
 	t_startDate := t_roundedToNextDay.AddDate(0, 0, 0)
 
 	r := StartDate{time: tt}
-	task := r.Run()
+	r.Compute()
 
-	if task.GetDate() != t_startDate {
+	if r.task.GetDate() != t_startDate {
 		t.Fail()
 	}
 }
@@ -42,13 +45,14 @@ func TestEndDateRule(t *testing.T) {
 	tt := time.Now()
 
 	sr := StartDate{time: tt}
-	t_startDate := sr.Run().GetDate()
+	sr.Compute()
+	t_startDate := sr.task.GetDate()
 	t_endDate := t_startDate.AddDate(0, 12, 0)
 
 	rule := EndDate{time: tt}
-	task := rule.Run()
+	rule.Compute()
 
-	if task.GetDate() != t_endDate {
+	if rule.task.GetDate() != t_endDate {
 		t.Fail()
 	}
 }
@@ -57,13 +61,14 @@ func TestAdvanceNoticeRule(t *testing.T) {
 	tt := time.Now()
 
 	er := EndDate{time: tt}
-	t_endDate := er.Run().GetDate()
+	er.Compute()
+	t_endDate := er.task.GetDate()
 	t_advanceNoticeDeadlineDate := t_endDate.AddDate(0, -3, 0)
 
 	rule := AdvanceNoticeDeadline{time: tt}
-	task := rule.Run()
+	rule.Compute()
 
-	if task.GetDate() != t_advanceNoticeDeadlineDate {
+	if rule.task.GetDate() != t_advanceNoticeDeadlineDate {
 		t.Fail()
 	}
 }
@@ -81,33 +86,21 @@ func TestPaymentQuantity(t *testing.T) {
 }
 
 func TestPaymentValue(t *testing.T) {
-	tt := time.Now()
+	pp := PeriodicPayment{}
+	pp.Compute().Save()
 
-	// Payment Quantity: 3
-	// Last payment value: 4
-	// Ordinary payment value: 10
+	if len(data.ContractInst.GetAttributes()) != 6 {
+		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", len(data.ContractInst.GetAttributes()), 3))
+	}
+}
 
-	t.Run("Test ordinary payment value", func(t *testing.T) {
+func TestTermination(t *testing.T) {
+	pp := Termination{}
+	pp.Compute().Save()
 
-		r1 := &PeriodicPayment{}
-		p1 := r1.Run()
+	attr := data.ContractInst.GetAttributes()
 
-		if p1.Value != 24 {
-			t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(p1.GetValue()), 24))
-		}
-
-	})
-
-	// t.Run("Test last payment (residual) value", func(t *testing.T) {
-	// 	r2 := &PeriodicPayment{
-	// 		time:          tt,
-	// 		params:        params,
-	// 	}
-	// 	p2 := r2.Execute()
-
-	// 	if int(p2.GetValue()) != 4 {
-	// 		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", int(p2.GetValue()), 4))
-	// 	}
-
-	// })
+	if attr["penalty_payment"].(*data.Payment).Value != 6.0 {
+		t.Error(fmt.Printf("The value of payment: %f is differerent to: %f", attr["penalty_payment"].(*data.Payment).Value, 12.0))
+	}
 }

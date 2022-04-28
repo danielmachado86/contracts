@@ -24,42 +24,47 @@ func createTask(n string, d time.Time) *data.Task {
 
 type SignatureDate struct {
 	time time.Time
+	task *data.Task
 }
 
-func (r SignatureDate) Run() *data.Task {
-	return createTask("signature_date", r.time)
+func (r *SignatureDate) Compute() Rule {
+	r.task = createTask("signature_date", r.time)
+	return r
 }
 
-func (r SignatureDate) Save() *data.Task {
-	return r.Run().Save()
+func (r *SignatureDate) Save() {
+	r.task.Save()
 }
 
 type StartDate struct {
 	time time.Time
+	task *data.Task
 }
 
-func (r StartDate) Run() *data.Task {
+func (r *StartDate) Compute() Rule {
 
 	params := data.GetParams()
 
 	sr := &SignatureDate{time: r.time}
 	o := params.Offset
 
-	rounded := roundDateToNextDay(sr.Run().GetDate())
+	sr.Compute()
+	rounded := roundDateToNextDay(sr.task.GetDate())
 	sd := rounded.AddDate(o.Years, o.Months, o.Days)
-
-	return createTask("start_date", sd)
+	r.task = createTask("start_date", sd)
+	return r
 }
 
-func (r StartDate) Save() *data.Task {
-	return r.Run().Save()
+func (r *StartDate) Save() {
+	r.task.Save()
 }
 
 type EndDate struct {
 	time time.Time
+	task *data.Task
 }
 
-func (r EndDate) Run() *data.Task {
+func (r *EndDate) Compute() Rule {
 
 	params := data.GetParams()
 
@@ -70,20 +75,23 @@ func (r EndDate) Run() *data.Task {
 		time: r.time,
 	}
 	// Termination date
-	td := sr.Run().AddPeriod(d)
+	sr.Compute()
+	td := sr.task.AddPeriod(d)
 
-	return createTask("end_date", td)
+	r.task = createTask("end_date", td)
+	return r
 }
 
-func (r EndDate) Save() *data.Task {
-	return r.Run().Save()
+func (r *EndDate) Save() {
+	r.task.Save()
 }
 
 type AdvanceNoticeDeadline struct {
 	time time.Time
+	task *data.Task
 }
 
-func (r AdvanceNoticeDeadline) Run() *data.Task {
+func (r *AdvanceNoticeDeadline) Compute() Rule {
 
 	params := data.GetParams()
 
@@ -92,24 +100,27 @@ func (r AdvanceNoticeDeadline) Run() *data.Task {
 
 	// End date rule
 	er := &EndDate{time: r.time}
+	er.Compute()
 	// End date
-	ed := er.Run().GetDate()
+	ed := er.task.GetDate()
 	// Advance notice deadline
 	nd := ed.AddDate(-p.Years, -p.Months, -p.Days)
 
-	return createTask("advance_notice_deadline", nd)
+	r.task = createTask("advance_notice_deadline", nd)
+	return r
 }
 
-func (r AdvanceNoticeDeadline) Save() *data.Task {
-	return r.Run().Save()
+func (r *AdvanceNoticeDeadline) Save() {
+	r.task.Save()
 }
 
-type PeriodicPaymentClosingDate struct {
+type NotificationDate struct {
 	time    time.Time
 	payment int
+	task    *data.Task
 }
 
-func (r PeriodicPaymentClosingDate) Run() *data.Task {
+func (r *NotificationDate) Compute() Rule {
 
 	params := data.GetParams()
 
@@ -118,29 +129,32 @@ func (r PeriodicPaymentClosingDate) Run() *data.Task {
 	p := params.PaymentPeriod
 	p.Months = p.Months * r.payment
 
+	sr.Compute()
 	//Payment closing date
-	pd := sr.Run().AddPeriod(p)
+	pd := sr.task.AddPeriod(p)
 
-	return createTask(fmt.Sprintf("closing_date_%d", r.payment), pd)
+	r.task = createTask(fmt.Sprintf("closing_date_%d", r.payment), pd)
+	return r
 }
 
-func (r PeriodicPaymentClosingDate) Save() *data.Task {
-	return r.Run().Save()
+func (r *NotificationDate) Save() {
+	r.task.Save()
 }
 
 type PaymentDueDate struct {
 	name string
 	time time.Time
+	task *data.Task
 }
 
-func (r PaymentDueDate) Run() *data.Task {
+func (r *PaymentDueDate) Compute() Rule {
 
 	//Payment closing date
 	pd := r.time.AddDate(0, 0, 5)
-
-	return createTask(fmt.Sprintf("%s_due_date", r.name), pd)
+	r.task = createTask(fmt.Sprintf("%s_due_date", r.name), pd)
+	return r
 }
 
-func (r PaymentDueDate) Save() *data.Task {
-	return r.Run().Save()
+func (r *PaymentDueDate) Save() {
+	r.task.Save()
 }
