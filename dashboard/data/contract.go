@@ -34,35 +34,11 @@ func GetParams() Params {
 	return params
 }
 
-var scheduleRules = []string{
-	"signature_date",
-	"start_date",
-	"end_date",
-	"advance_notice_deadline",
-}
-
-var paymentRules = []string{
-	"periodic_payment",
-	"termination",
-}
-
 // Defines agreement parameters
 type ContractTemplate struct {
-	Name          string
-	Type          TemplateType
-	Params        *Params
-	ScheduleRules []string
-	PaymentRules  []string
-}
-
-func NewContractTemplate(n string, t TemplateType, p *Params, sr []string, pr []string) *ContractTemplate {
-	return &ContractTemplate{
-		Name:          n,
-		Type:          t,
-		Params:        p,
-		ScheduleRules: scheduleRules,
-		PaymentRules:  paymentRules,
-	}
+	Name   string
+	Type   TemplateType
+	Params *Params
 }
 
 // Defines contract structure

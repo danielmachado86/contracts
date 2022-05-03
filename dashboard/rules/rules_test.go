@@ -9,98 +9,112 @@ import (
 )
 
 func TestSignatureDateRule(t *testing.T) {
-	tt := time.Now()
 
-	r := SignatureDate{time: tt}
+	parties := []*data.Party{
+		data.Party1,
+		data.Party2,
+	}
+
+	r := SignatureDate{parties: parties}
 	r.Compute()
 
-	if r.task.GetDate() != tt {
-		t.Fail()
+	got := r.task.GetDate()
+
+	want := time.Date(2022, 4, 27, 15, 0, 0, 0, time.UTC)
+
+	if got != want {
+		t.Error(fmt.Print("Got: ", got, "\n", "Want: ", want, "\n"))
 	}
 }
 
 func TestStartDateRule(t *testing.T) {
-	tt := time.Now()
-	sr := SignatureDate{time: tt}
-	sr.Compute()
-	sd := sr.task.GetDate()
-	t_roundedToNextDay := time.Date(
-		sd.Year(),
-		sd.Month(),
-		sd.Day()+1,
-		0, 0, 0, 0,
-		sd.Location(),
-	)
-	t_startDate := t_roundedToNextDay.AddDate(0, 0, 0)
+	parties := []*data.Party{
+		data.Party1,
+		data.Party2,
+	}
 
-	r := StartDate{time: tt}
+	r := StartDate{parties: parties}
 	r.Compute()
 
-	if r.task.GetDate() != t_startDate {
-		t.Fail()
+	got := r.task.GetDate()
+
+	want := time.Date(2022, 4, 28, 0, 0, 0, 0, time.UTC)
+
+	if got != want {
+		t.Error(fmt.Print("Got: ", got, "\n", "Want: ", want, "\n"))
 	}
 }
 
 func TestEndDateRule(t *testing.T) {
-	tt := time.Now()
 
-	sr := StartDate{time: tt}
-	sr.Compute()
-	t_startDate := sr.task.GetDate()
-	t_endDate := t_startDate.AddDate(0, 12, 0)
+	parties := []*data.Party{
+		data.Party1,
+		data.Party2,
+	}
 
-	rule := EndDate{time: tt}
-	rule.Compute()
+	r := EndDate{parties: parties}
+	r.Compute()
 
-	if rule.task.GetDate() != t_endDate {
-		t.Fail()
+	got := r.task.GetDate()
+
+	want := time.Date(2023, 4, 27, 23, 59, 59, 0, time.UTC)
+
+	if got != want {
+		t.Error(fmt.Print("Got: ", got, "\n", "Want: ", want, "\n"))
 	}
 }
 
 func TestAdvanceNoticeRule(t *testing.T) {
-	tt := time.Now()
+	parties := []*data.Party{
+		data.Party1,
+		data.Party2,
+	}
 
-	er := EndDate{time: tt}
-	er.Compute()
-	t_endDate := er.task.GetDate()
-	t_advanceNoticeDeadlineDate := t_endDate.AddDate(0, -3, 0)
+	r := AdvanceNoticeDeadline{parties: parties}
+	r.Compute()
 
-	rule := AdvanceNoticeDeadline{time: tt}
-	rule.Compute()
+	got := r.task.GetDate()
 
-	if rule.task.GetDate() != t_advanceNoticeDeadlineDate {
-		t.Fail()
+	want := time.Date(2023, 1, 27, 23, 59, 59, 0, time.UTC)
+
+	if got != want {
+		t.Error(fmt.Print("Got: ", got, "\n", "Want: ", want, "\n"))
 	}
 }
 
 func TestPaymentQuantity(t *testing.T) {
 	r := PeriodicPayment{}
 
-	qty := r.PeriodicPaymentQuantity()
-	tQty := 3
+	got := r.PeriodicPaymentQuantity()
+	want := 3
 
-	if qty != tQty {
-		t.Error(fmt.Printf("The quantity of payments: %d is differerent to: %d", qty, tQty))
+	if got != want {
+		t.Error(fmt.Printf("The quantity of payments: %d is differerent to: %d", got, want))
 	}
 
 }
 
-func TestPaymentValue(t *testing.T) {
+func TestPeriodicPayment(t *testing.T) {
 	pp := PeriodicPayment{}
 	pp.Compute().Save()
 
-	if len(data.ContractInst.GetAttributes()) != 6 {
-		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", len(data.ContractInst.GetAttributes()), 3))
+	got := len(data.ContractInst.GetAttributes())
+	want := 6
+
+	if got != want {
+		t.Error(fmt.Printf("The value of payment: %d is differerent to: %d", got, want))
 	}
 }
 
 func TestTermination(t *testing.T) {
-	pp := Termination{}
-	pp.Compute().Save()
+	r := Termination{}
+	r.Compute().Save()
 
 	attr := data.ContractInst.GetAttributes()
+	got := attr["penalty_payment"].(*data.Payment).Value
+	want := 6.0
 
-	if attr["penalty_payment"].(*data.Payment).Value != 6.0 {
-		t.Error(fmt.Printf("The value of payment: %f is differerent to: %f", attr["penalty_payment"].(*data.Payment).Value, 12.0))
+	if got != want {
+		t.Error(fmt.Printf("The value of payment: %f is differerent to: %f", got, want))
 	}
 }

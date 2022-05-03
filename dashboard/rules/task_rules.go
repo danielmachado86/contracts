@@ -22,13 +22,22 @@ func createTask(n string, d time.Time) *data.Task {
 	return t
 }
 
+// Define las condiciones para calcular la fecha de firma de contrato
 type SignatureDate struct {
-	time time.Time
-	task *data.Task
+	task    *data.Task
+	parties []*data.Party
 }
 
+// Calcula fecha de firma de contrato
 func (r *SignatureDate) Compute() Rule {
-	r.task = createTask("signature_date", r.time)
+	t := time.Date(1970, 1, 1, 1, 0, 0, 0, time.UTC)
+	for _, p := range r.parties {
+		d := data.GetSignature(p).Date
+		if d.After(t) {
+			t = d
+		}
+	}
+	r.task = createTask("signature_date", t)
 	return r
 }
 
@@ -37,15 +46,15 @@ func (r *SignatureDate) Save() {
 }
 
 type StartDate struct {
-	time time.Time
-	task *data.Task
+	parties []*data.Party
+	task    *data.Task
 }
 
 func (r *StartDate) Compute() Rule {
 
 	params := data.GetParams()
 
-	sr := &SignatureDate{time: r.time}
+	sr := &SignatureDate{parties: r.parties}
 	o := params.Offset
 
 	sr.Compute()
@@ -60,8 +69,8 @@ func (r *StartDate) Save() {
 }
 
 type EndDate struct {
-	time time.Time
-	task *data.Task
+	parties []*data.Party
+	task    *data.Task
 }
 
 func (r *EndDate) Compute() Rule {
@@ -72,11 +81,11 @@ func (r *EndDate) Compute() Rule {
 
 	// Start rule
 	sr := &StartDate{
-		time: r.time,
+		parties: r.parties,
 	}
 	// Termination date
 	sr.Compute()
-	td := sr.task.AddPeriod(d)
+	td := sr.task.AddPeriod(d).Add(-time.Second * 1)
 
 	r.task = createTask("end_date", td)
 	return r
@@ -87,8 +96,8 @@ func (r *EndDate) Save() {
 }
 
 type AdvanceNoticeDeadline struct {
-	time time.Time
-	task *data.Task
+	parties []*data.Party
+	task    *data.Task
 }
 
 func (r *AdvanceNoticeDeadline) Compute() Rule {
@@ -99,7 +108,7 @@ func (r *AdvanceNoticeDeadline) Compute() Rule {
 	p := params.PeriodAN
 
 	// End date rule
-	er := &EndDate{time: r.time}
+	er := &EndDate{parties: r.parties}
 	er.Compute()
 	// End date
 	ed := er.task.GetDate()
@@ -115,25 +124,13 @@ func (r *AdvanceNoticeDeadline) Save() {
 }
 
 type NotificationDate struct {
-	time    time.Time
+	parties []*data.Party
 	payment int
 	task    *data.Task
 }
 
 func (r *NotificationDate) Compute() Rule {
 
-	params := data.GetParams()
-
-	sr := &StartDate{time: r.time}
-
-	p := params.PaymentPeriod
-	p.Months = p.Months * r.payment
-
-	sr.Compute()
-	//Payment closing date
-	pd := sr.task.AddPeriod(p)
-
-	r.task = createTask(fmt.Sprintf("closing_date_%d", r.payment), pd)
 	return r
 }
 

@@ -25,7 +25,7 @@ func (r *Termination) Compute() Rule {
 
 	n := "penalty_payment"
 	pp := &PeriodicPayment{}
-	v := pp.PeriodicPaymentValue(1, 1) * float64(params.Penalty.Months)
+	v := pp.PaymentValue(params.Price, params.Duration.Months) * float64(params.Penalty.Months)
 	r.payment = createPayment(n, v, r.time)
 	return r
 }
@@ -112,6 +112,10 @@ func (r *PeriodicPayment) residualPayment() float64 {
 
 }
 
+func (r *PeriodicPayment) PaymentValue(price float64, duration int) float64 {
+	return price / float64(duration)
+}
+
 func (r *PeriodicPayment) PeriodicPaymentValue(pn int, pq int) float64 {
 
 	params := data.GetParams()
@@ -119,7 +123,7 @@ func (r *PeriodicPayment) PeriodicPaymentValue(pn int, pq int) float64 {
 	// Period: Time between payments
 	p := float64(params.PaymentPeriod.Months)
 	// Contract duration
-	d := float64(params.Duration.Months)
+	d := params.Duration.Months
 	// Contract value
 	v := float64(params.Price)
 
@@ -131,5 +135,5 @@ func (r *PeriodicPayment) PeriodicPaymentValue(pn int, pq int) float64 {
 	}
 
 	// Payment value per period unit
-	return (v / d) * p
+	return r.PaymentValue(v, d) * p
 }
