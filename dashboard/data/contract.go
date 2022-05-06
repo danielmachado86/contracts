@@ -6,12 +6,6 @@ import (
 	"github.com/danielmachado86/contracts/dashboard/utils"
 )
 
-type TemplateType int
-
-const (
-	Rental TemplateType = iota
-)
-
 type Params struct {
 	PeriodAN      *utils.Period // Advanced notice period
 	PaymentPeriod *utils.Period
@@ -37,7 +31,6 @@ func GetParams() Params {
 // Defines agreement parameters
 type ContractTemplate struct {
 	Name   string
-	Type   TemplateType
 	Params *Params
 }
 
