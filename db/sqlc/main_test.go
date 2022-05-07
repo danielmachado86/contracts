@@ -11,7 +11,7 @@ import (
 
 const (
 	dbDriver = "postgres"
-	dbSource = "postgresql://root:secret@host.docker.internal:5432/contracts?sslmode=disable&&binary_parameters=yes&&client_encoding=UTF8"
+	dbSource = "postgresql://root:secret@localhost:5432/contracts?sslmode=disable"
 )
 
 var testQueries *Queries
