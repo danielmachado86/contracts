@@ -71,7 +71,7 @@ func TestDeleteUser(t *testing.T) {
 	require.Empty(t, user2)
 }
 
-func TestListUser(t *testing.T) {
+func TestListUsers(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		createRandomUser(t)
 	}
