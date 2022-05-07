@@ -1,6 +1,0 @@
-go 1.18
-
-use ./product-api
-use ./product-images
-use ./currency
-use ./dashboard
