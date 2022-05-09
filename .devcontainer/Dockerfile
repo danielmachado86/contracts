@@ -13,8 +13,12 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt install -y protobuf-compiler
 
 # [Optional] Uncomment the next lines to use go get to install anything else you need
-# USER vscode
-# RUN go get -x <your-dependency-or-tool>
+USER vscode
+
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz \
+        && sudo mv migrate /usr/bin/
+
+RUN go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
 
 # [Optional] Uncomment this line to install global node packages.
 # RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
