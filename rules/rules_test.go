@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danielmachado86/contracts/dashboard/data"
+	"github.com/danielmachado86/contracts/data"
 )
 
 func TestSignatureDateRule(t *testing.T) {

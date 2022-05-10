@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/danielmachado86/contracts/dashboard/data"
+	"github.com/danielmachado86/contracts/data"
 )
 
 func roundDateToNextDay(t time.Time) time.Time {

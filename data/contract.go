@@ -3,7 +3,7 @@ package data
 import (
 	"time"
 
-	"github.com/danielmachado86/contracts/dashboard/utils"
+	"github.com/danielmachado86/contracts/utils"
 )
 
 type Params struct {

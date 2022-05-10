@@ -29,9 +29,29 @@ func (e *PeriodUnits) Scan(src interface{}) error {
 	return nil
 }
 
+type Templates string
+
+const (
+	TemplatesRental    Templates = "rental"
+	TemplatesFreelance Templates = "freelance"
+	TemplatesServices  Templates = "services"
+)
+
+func (e *Templates) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Templates(s)
+	case string:
+		*e = Templates(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Templates: %T", src)
+	}
+	return nil
+}
+
 type Contract struct {
-	ID       int64 `json:"id"`
-	Template int32 `json:"template"`
+	ID       int64     `json:"id"`
+	Template Templates `json:"template"`
 }
 
 type Party struct {

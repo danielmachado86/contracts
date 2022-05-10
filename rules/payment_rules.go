@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/danielmachado86/contracts/dashboard/data"
+	"github.com/danielmachado86/contracts/data"
 )
 
 func createPayment(n string, v float64, t time.Time) *data.Payment {

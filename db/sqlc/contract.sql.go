@@ -18,7 +18,7 @@ INSERT INTO contracts (
 RETURNING id, template
 `
 
-func (q *Queries) CreateContract(ctx context.Context, template int32) (Contract, error) {
+func (q *Queries) CreateContract(ctx context.Context, template Templates) (Contract, error) {
 	row := q.db.QueryRowContext(ctx, createContract, template)
 	var i Contract
 	err := row.Scan(&i.ID, &i.Template)
@@ -65,7 +65,7 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Contract
+	items := []Contract{}
 	for rows.Next() {
 		var i Contract
 		if err := rows.Scan(&i.ID, &i.Template); err != nil {
@@ -89,8 +89,8 @@ RETURNING id, template
 `
 
 type UpdateContractParams struct {
-	ID       int64 `json:"id"`
-	Template int32 `json:"template"`
+	ID       int64     `json:"id"`
+	Template Templates `json:"template"`
 }
 
 func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error) {

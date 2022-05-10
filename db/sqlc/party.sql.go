@@ -81,7 +81,7 @@ func (q *Queries) ListParties(ctx context.Context, arg ListPartiesParams) ([]Par
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Party
+	items := []Party{}
 	for rows.Next() {
 		var i Party
 		if err := rows.Scan(&i.UserID, &i.ContractID, &i.CreatedAt); err != nil {

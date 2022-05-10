@@ -1,3 +1,9 @@
+CREATE TYPE "templates" AS ENUM (
+  'rental',
+  'freelance',
+  'services'
+);
+
 CREATE TYPE "period_units" AS ENUM (
   'days',
   'months',
@@ -6,7 +12,7 @@ CREATE TYPE "period_units" AS ENUM (
 
 CREATE TABLE "contracts" (
   "id" bigserial PRIMARY KEY,
-  "template" int NOT NULL DEFAULT 1
+  "template" templates NOT NULL
 );
 
 CREATE TABLE "period_params" (

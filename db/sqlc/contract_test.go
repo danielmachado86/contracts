@@ -9,11 +9,11 @@ import (
 )
 
 func createRandomContract(t *testing.T) Contract {
-	contract, err := testQueries.CreateContract(context.Background(), 1)
+	contract, err := testQueries.CreateContract(context.Background(), TemplatesRental)
 	require.NoError(t, err)
 	require.NotEmpty(t, contract)
 
-	require.Equal(t, int32(1), contract.Template)
+	require.Equal(t, TemplatesRental, contract.Template)
 
 	require.NotZero(t, contract.ID)
 
@@ -40,7 +40,7 @@ func TestUpdateContract(t *testing.T) {
 
 	arg := UpdateContractParams{
 		ID:       contract1.ID,
-		Template: 3,
+		Template: TemplatesRental,
 	}
 
 	contract2, err := testQueries.UpdateContract(context.Background(), arg)

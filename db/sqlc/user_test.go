@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/danielmachado86/contracts/dashboard/utils"
+	"github.com/danielmachado86/contracts/utils"
 	"github.com/stretchr/testify/require"
 )
 
