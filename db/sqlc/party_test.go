@@ -74,18 +74,20 @@ func TestDeleteParty(t *testing.T) {
 }
 
 func TestListParties(t *testing.T) {
+	var party Party
 	for i := 0; i < 10; i++ {
-		createRandomParty(t)
+		party = createRandomParty(t)
 	}
 
 	arg := ListPartiesParams{
-		Limit:  5,
-		Offset: 5,
+		ContractID: party.ContractID,
+		Limit:      1,
+		Offset:     0,
 	}
 
 	parties, err := testQueries.ListParties(context.Background(), arg)
 	require.NoError(t, err)
-	require.Len(t, parties, 5)
+	require.Len(t, parties, 1)
 
 	for _, contract := range parties {
 		require.NotEmpty(t, contract)
