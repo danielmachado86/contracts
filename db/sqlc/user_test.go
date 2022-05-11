@@ -30,7 +30,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestGetUser(t *testing.T) {
 	user1 := createRandomUser(t)
-	user2, err := testQueries.GetUser(context.Background(), user1.Name)
+	user2, err := testQueries.GetUser(context.Background(), user1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, user2)
@@ -65,7 +65,7 @@ func TestDeleteUser(t *testing.T) {
 	err := testQueries.DeleteUser(context.Background(), user1.ID)
 	require.NoError(t, err)
 
-	user2, err := testQueries.GetUser(context.Background(), user1.Name)
+	user2, err := testQueries.GetUser(context.Background(), user1.ID)
 	require.Error(t, err)
 	require.EqualError(t, err, sql.ErrNoRows.Error())
 	require.Empty(t, user2)

@@ -13,9 +13,10 @@ WHERE user_id = $1 AND contract_id = $2 LIMIT 1;
 
 -- name: ListParties :many
 SELECT * FROM parties
-ORDER BY user_id, contract_id
-LIMIT $1
-OFFSET $2;
+WHERE contract_id = $1
+ORDER BY user_id
+LIMIT $2
+OFFSET $3;
 
 -- name: DeleteParty :exec
 DELETE FROM parties

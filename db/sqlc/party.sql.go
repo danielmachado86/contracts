@@ -65,18 +65,20 @@ func (q *Queries) GetParty(ctx context.Context, arg GetPartyParams) (Party, erro
 
 const listParties = `-- name: ListParties :many
 SELECT user_id, contract_id, created_at FROM parties
-ORDER BY user_id, contract_id
-LIMIT $1
-OFFSET $2
+WHERE contract_id = $1
+ORDER BY user_id
+LIMIT $2
+OFFSET $3
 `
 
 type ListPartiesParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	ContractID int64 `json:"contractID"`
+	Limit      int32 `json:"limit"`
+	Offset     int32 `json:"offset"`
 }
 
 func (q *Queries) ListParties(ctx context.Context, arg ListPartiesParams) ([]Party, error) {
-	rows, err := q.db.QueryContext(ctx, listParties, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listParties, arg.ContractID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
