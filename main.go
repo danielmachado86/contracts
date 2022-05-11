@@ -6,24 +6,24 @@ import (
 
 	"github.com/danielmachado86/contracts/api"
 	db "github.com/danielmachado86/contracts/db/sqlc"
+	"github.com/danielmachado86/contracts/utils"
 	_ "github.com/lib/pq"
 )
 
-const (
-	serverAddress = "0.0.0.0:8080"
-	dbDriver      = "postgres"
-	dbSource      = "postgresql://root:secret@localhost:5432/contracts?sslmode=disable"
-)
-
 func main() {
-	conn, err := sql.Open(dbDriver, dbSource)
+	config, err := utils.LoadConfig("./.env")
+	if err != nil {
+		log.Fatal("cannot load config:", err)
+	}
+
+	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal("cannot connect to db:", err)
 	}
 	store := db.NewStore(conn)
 	server := api.NewServer(store)
 
-	err = server.Start(serverAddress)
+	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("cannot start server:", err)
 	}
