@@ -41,6 +41,10 @@ CREATE TABLE "time_params" (
 CREATE TABLE "users" (
   "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
+  "last_name" varchar NOT NULL,
+  "username" varchar NOT NULL,
+  "email" varchar NOT NULL,
+  "password_hash" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 

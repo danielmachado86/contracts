@@ -6,11 +6,11 @@ import (
 )
 
 type Server struct {
-	store  *db.Store
+	store  db.Store
 	router *gin.Engine
 }
 
-func NewServer(store *db.Store) *Server {
+func NewServer(store db.Store) (*Server, error) {
 	server := &Server{store: store}
 	router := gin.Default()
 
@@ -31,7 +31,7 @@ func NewServer(store *db.Store) *Server {
 	router.GET("/contracts/:id/periods", server.listPeriodParam)
 
 	server.router = router
-	return server
+	return server, nil
 }
 
 func (server *Server) Start(address string) error {
