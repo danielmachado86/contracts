@@ -47,7 +47,107 @@ func EqCreateUserParams(arg db.CreateUserParams) gomock.Matcher {
 	return eqCreateUserParamsMatcher{arg}
 }
 
-func TestCreateUser(t *testing.T) {
+func TestCreateUserRequiredParams(t *testing.T) {
+	user := randomUser(t)
+
+	tt := []struct {
+		name          string
+		body          gin.H
+		checkResponse func(recoder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "EmptyBody",
+			body: gin.H{},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "NameMissing",
+			body: gin.H{
+				"lastName":     user.LastName,
+				"username":     user.Username,
+				"email":        user.Email,
+				"passwordHash": user.PasswordHash,
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "LastNameMissing",
+			body: gin.H{
+				"Name":         user.Name,
+				"username":     user.Username,
+				"email":        user.Email,
+				"passwordHash": user.PasswordHash,
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "UsernameMissing",
+			body: gin.H{
+				"Name":         user.Name,
+				"LastName":     user.LastName,
+				"email":        user.Email,
+				"passwordHash": user.PasswordHash,
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "EmailMissing",
+			body: gin.H{
+				"Name":         user.Name,
+				"LastName":     user.LastName,
+				"Username":     user.Username,
+				"passwordHash": user.PasswordHash,
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name: "PaswordHashMissing",
+			body: gin.H{
+				"Name":     user.Name,
+				"LastName": user.LastName,
+				"Username": user.Username,
+				"email":    user.Email,
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			store := mockdb.NewMockStore(ctrl)
+
+			server := newTestServer(t, store)
+			rec := httptest.NewRecorder()
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			rPath := "/users"
+			req, err := http.NewRequest(http.MethodPost, rPath, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(rec, req)
+			tc.checkResponse(rec)
+
+		})
+	}
+}
+
+func TestCreateUserMockDB(t *testing.T) {
 	user := randomUser(t)
 
 	tt := []struct {
