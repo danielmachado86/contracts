@@ -12,11 +12,11 @@ import (
 
 func createRandomUser(t *testing.T) User {
 	arg := CreateUserParams{
-		Name:         utils.RandomString(6),
-		LastName:     utils.RandomString(6),
-		Username:     utils.RandomUser(),
-		Email:        utils.RandomEmail(),
-		PasswordHash: "password",
+		Name:           utils.RandomString(6),
+		LastName:       utils.RandomString(6),
+		Username:       utils.RandomUser(),
+		Email:          utils.RandomEmail(),
+		HashedPassword: "password",
 	}
 	user, err := testQueries.CreateUser(context.Background(), arg)
 	require.NoError(t, err)
@@ -26,9 +26,8 @@ func createRandomUser(t *testing.T) User {
 	require.Equal(t, arg.LastName, user.LastName)
 	require.Equal(t, arg.Username, user.Username)
 	require.Equal(t, arg.Email, user.Email)
+	require.True(t, user.PasswordChangedAt.IsZero())
 	require.NotZero(t, user.CreatedAt)
-
-	require.NotZero(t, user.ID)
 
 	return user
 }
@@ -45,6 +44,11 @@ func TestGetUser(t *testing.T) {
 	require.NotEmpty(t, user2)
 
 	require.Equal(t, user1.ID, user2.ID)
+	require.Equal(t, user1.Name, user2.Name)
+	require.Equal(t, user1.LastName, user2.LastName)
+	require.Equal(t, user1.Username, user2.Username)
+	require.Equal(t, user1.Email, user2.Email)
+	require.WithinDuration(t, user1.PasswordChangedAt, user2.PasswordChangedAt, time.Second)
 	require.WithinDuration(t, user1.CreatedAt, user2.CreatedAt, time.Second)
 
 }
@@ -78,23 +82,4 @@ func TestDeleteUser(t *testing.T) {
 	require.Error(t, err)
 	require.EqualError(t, err, sql.ErrNoRows.Error())
 	require.Empty(t, user2)
-}
-
-func TestListUsers(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		createRandomUser(t)
-	}
-
-	arg := ListUsersParams{
-		Limit:  5,
-		Offset: 5,
-	}
-
-	users, err := testQueries.ListUsers(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, users, 5)
-
-	for _, contract := range users {
-		require.NotEmpty(t, contract)
-	}
 }

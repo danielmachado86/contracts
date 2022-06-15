@@ -84,11 +84,12 @@ type TimeParam struct {
 }
 
 type User struct {
-	ID           int64     `json:"id"`
-	Name         string    `json:"name"`
-	LastName     string    `json:"lastName"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"passwordHash"`
-	CreatedAt    time.Time `json:"createdAt"`
+	ID                int64     `json:"id"`
+	Name              string    `json:"name"`
+	LastName          string    `json:"lastName"`
+	Username          string    `json:"username"`
+	Email             string    `json:"email"`
+	HashedPassword    string    `json:"hashedPassword"`
+	PasswordChangedAt time.Time `json:"passwordChangedAt"`
+	CreatedAt         time.Time `json:"createdAt"`
 }

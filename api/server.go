@@ -20,7 +20,6 @@ func NewServer(store db.Store) (*Server, error) {
 
 	router.POST("/users", server.createUser)
 	router.GET("/users/:id", server.getUser)
-	router.GET("/users", server.listUser)
 
 	router.PUT("/contracts/:id/users/:userID", server.createParty)
 	router.GET("/contracts/:id/users/:userID", server.getParty)

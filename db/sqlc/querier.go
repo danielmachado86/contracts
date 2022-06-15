@@ -28,7 +28,6 @@ type Querier interface {
 	ListParties(ctx context.Context, arg ListPartiesParams) ([]Party, error)
 	ListPeriodParams(ctx context.Context, arg ListPeriodParamsParams) ([]PeriodParam, error)
 	ListTimeParams(ctx context.Context, arg ListTimeParamsParams) ([]TimeParam, error)
-	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)
 	UpdatePeriodParam(ctx context.Context, arg UpdatePeriodParamParams) (PeriodParam, error)
 	UpdateTimeParam(ctx context.Context, arg UpdateTimeParamParams) (TimeParam, error)
