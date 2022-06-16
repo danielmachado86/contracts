@@ -55,7 +55,7 @@ type Contract struct {
 }
 
 type Party struct {
-	UserID     int64     `json:"userID"`
+	Username   string    `json:"username"`
 	ContractID int64     `json:"contractID"`
 	CreatedAt  time.Time `json:"createdAt"`
 }
@@ -84,7 +84,6 @@ type TimeParam struct {
 }
 
 type User struct {
-	ID                int64     `json:"id"`
 	Name              string    `json:"name"`
 	LastName          string    `json:"lastName"`
 	Username          string    `json:"username"`

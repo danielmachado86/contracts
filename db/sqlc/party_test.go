@@ -14,14 +14,14 @@ func createRandomParty(t *testing.T) Party {
 	contract := createRandomContract(t)
 
 	args := CreatePartyParams{
-		UserID:     user1.ID,
+		Username:   user1.Username,
 		ContractID: contract.ID,
 	}
 	party, err := testQueries.CreateParty(context.Background(), args)
 	require.NoError(t, err)
 	require.NotEmpty(t, party)
 
-	require.Equal(t, user1.ID, party.UserID)
+	require.Equal(t, user1.Username, party.Username)
 	require.Equal(t, contract.ID, party.ContractID)
 	require.NotZero(t, party.CreatedAt)
 
@@ -36,7 +36,7 @@ func TestGetParty(t *testing.T) {
 	party1 := createRandomParty(t)
 
 	args := GetPartyParams{
-		UserID:     party1.UserID,
+		Username:   party1.Username,
 		ContractID: party1.ContractID,
 	}
 
@@ -45,7 +45,7 @@ func TestGetParty(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, party2)
 
-	require.Equal(t, party1.UserID, party2.UserID)
+	require.Equal(t, party1.Username, party2.Username)
 	require.Equal(t, party1.ContractID, party2.ContractID)
 	require.WithinDuration(t, party1.CreatedAt, party2.CreatedAt, time.Second)
 
@@ -55,7 +55,7 @@ func TestDeleteParty(t *testing.T) {
 	party1 := createRandomParty(t)
 
 	arg := DeletePartyParams{
-		UserID:     party1.UserID,
+		Username:   party1.Username,
 		ContractID: party1.ContractID,
 	}
 
@@ -63,7 +63,7 @@ func TestDeleteParty(t *testing.T) {
 	require.NoError(t, err)
 
 	arg2 := GetPartyParams{
-		UserID:     party1.UserID,
+		Username:   party1.Username,
 		ContractID: party1.ContractID,
 	}
 

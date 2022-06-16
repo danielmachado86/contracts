@@ -18,12 +18,12 @@ type Querier interface {
 	DeleteParty(ctx context.Context, arg DeletePartyParams) error
 	DeletePeriodParam(ctx context.Context, id int64) error
 	DeleteTimeParam(ctx context.Context, id int64) error
-	DeleteUser(ctx context.Context, id int64) error
+	DeleteUser(ctx context.Context, username string) error
 	GetContract(ctx context.Context, id int64) (Contract, error)
 	GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
 	GetPeriodParam(ctx context.Context, id int64) (PeriodParam, error)
 	GetTimeParam(ctx context.Context, id int64) (TimeParam, error)
-	GetUser(ctx context.Context, id int64) (User, error)
+	GetUser(ctx context.Context, username string) (User, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]Contract, error)
 	ListParties(ctx context.Context, arg ListPartiesParams) ([]Party, error)
 	ListPeriodParams(ctx context.Context, arg ListPeriodParamsParams) ([]PeriodParam, error)

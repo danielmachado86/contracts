@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 
 	mockdb "github.com/danielmachado86/contracts/db/mock"
 	db "github.com/danielmachado86/contracts/db/sqlc"
@@ -20,7 +21,12 @@ import (
 )
 
 func newTestServer(t *testing.T, store db.Store) *Server {
-	server, err := NewServer(store)
+	config := utils.Config{
+		TokenSymmetricKey:   utils.RandomString(32),
+		AccessTokenDuration: time.Minute,
+	}
+
+	server, err := NewServer(config, store)
 	require.NoError(t, err)
 
 	return server

@@ -9,8 +9,8 @@ import (
 )
 
 type createPartyRequest struct {
-	UserID     int64 `uri:"userID" binding:"required,min=1"`
-	ContractID int64 `uri:"id" binding:"required,min=1"`
+	Username   string `uri:"username" binding:"required"`
+	ContractID int64  `uri:"id" binding:"required,min=1"`
 }
 
 func (server *Server) createParty(ctx *gin.Context) {
@@ -21,7 +21,7 @@ func (server *Server) createParty(ctx *gin.Context) {
 	}
 
 	arg := db.CreatePartyParams{
-		UserID:     req.UserID,
+		Username:   req.Username,
 		ContractID: req.ContractID,
 	}
 
@@ -35,8 +35,8 @@ func (server *Server) createParty(ctx *gin.Context) {
 }
 
 type getPartyRequest struct {
-	UserID     int64 `uri:"userID" binding:"required,min=1"`
-	ContractID int64 `uri:"id" binding:"required,min=1"`
+	Username   string `uri:"username" binding:"required"`
+	ContractID int64  `uri:"id" binding:"required,min=1"`
 }
 
 func (server *Server) getParty(ctx *gin.Context) {
@@ -47,7 +47,7 @@ func (server *Server) getParty(ctx *gin.Context) {
 	}
 
 	arg := db.GetPartyParams{
-		UserID:     req.UserID,
+		Username:   req.Username,
 		ContractID: req.ContractID,
 	}
 

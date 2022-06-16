@@ -39,10 +39,9 @@ CREATE TABLE "time_params" (
 );
 
 CREATE TABLE "users" (
-  "id" bigserial PRIMARY KEY,
   "name" varchar NOT NULL,
   "last_name" varchar NOT NULL,
-  "username" varchar UNIQUE NOT NULL,
+  "username" varchar PRIMARY KEY,
   "email" varchar UNIQUE NOT NULL,
   "hashed_password" varchar NOT NULL,
   "password_changed_at" timestamptz NOT NULL DEFAULT '0001-01-01 00:00:00Z',
@@ -50,10 +49,10 @@ CREATE TABLE "users" (
 );
 
 CREATE TABLE "parties" (
-  "user_id" bigint NOT NULL,
+  "username" varchar NOT NULL,
   "contract_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
-  PRIMARY KEY ("user_id", "contract_id")
+  PRIMARY KEY ("username", "contract_id")
 );
 
 CREATE INDEX ON "period_params" ("contract_id");
@@ -66,7 +65,7 @@ CREATE INDEX ON "users" ("username");
 
 CREATE INDEX ON "users" ("email");
 
-CREATE INDEX ON "parties" ("user_id");
+CREATE INDEX ON "parties" ("username");
 
 CREATE INDEX ON "parties" ("contract_id");
 
@@ -76,6 +75,6 @@ ALTER TABLE "price_params" ADD FOREIGN KEY ("contract_id") REFERENCES "contracts
 
 ALTER TABLE "time_params" ADD FOREIGN KEY ("contract_id") REFERENCES "contracts" ("id");
 
-ALTER TABLE "parties" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+ALTER TABLE "parties" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
 
 ALTER TABLE "parties" ADD FOREIGN KEY ("contract_id") REFERENCES "contracts" ("id");

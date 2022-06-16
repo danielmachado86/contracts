@@ -15,7 +15,7 @@ INSERT INTO users (
 ) VALUES (
   $1, $2, $3, $4, $5
 )
-RETURNING id, name, last_name, username, email, hashed_password, password_changed_at, created_at
+RETURNING name, last_name, username, email, hashed_password, password_changed_at, created_at
 `
 
 type CreateUserParams struct {
@@ -36,7 +36,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	)
 	var i User
 	err := row.Scan(
-		&i.ID,
 		&i.Name,
 		&i.LastName,
 		&i.Username,
@@ -50,24 +49,23 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
-WHERE id = $1
+WHERE username = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteUser, id)
+func (q *Queries) DeleteUser(ctx context.Context, username string) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, username)
 	return err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, last_name, username, email, hashed_password, password_changed_at, created_at FROM users
-WHERE id = $1 LIMIT 1
+SELECT name, last_name, username, email, hashed_password, password_changed_at, created_at FROM users
+WHERE username = $1 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
+func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, username)
 	var i User
 	err := row.Scan(
-		&i.ID,
 		&i.Name,
 		&i.LastName,
 		&i.Username,
@@ -81,20 +79,19 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users SET name = $2
-WHERE id = $1
-RETURNING id, name, last_name, username, email, hashed_password, password_changed_at, created_at
+WHERE username = $1
+RETURNING name, last_name, username, email, hashed_password, password_changed_at, created_at
 `
 
 type UpdateUserParams struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUser, arg.ID, arg.Name)
+	row := q.db.QueryRowContext(ctx, updateUser, arg.Username, arg.Name)
 	var i User
 	err := row.Scan(
-		&i.ID,
 		&i.Name,
 		&i.LastName,
 		&i.Username,
