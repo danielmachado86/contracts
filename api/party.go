@@ -2,15 +2,25 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	db "github.com/danielmachado86/contracts/db/sqlc"
+	"github.com/danielmachado86/contracts/token"
 	"github.com/gin-gonic/gin"
 )
 
 type createPartyRequest struct {
-	Username   string `uri:"username" binding:"required"`
-	ContractID int64  `uri:"id" binding:"required,min=1"`
+	ContractID int64 `uri:"id" binding:"required,min=1"`
+}
+type createPartyJSONRequest struct {
+	Username string `json:"username" binding:"required"`
+}
+
+type createPartyResponse struct {
+	Username string      `json:"username"`
+	Contract db.Contract `json:"contract"`
+	Party    db.Party    `json:"party"`
 }
 
 func (server *Server) createParty(ctx *gin.Context) {
@@ -20,9 +30,33 @@ func (server *Server) createParty(ctx *gin.Context) {
 		return
 	}
 
+	var JSONReq createPartyJSONRequest
+	if err := ctx.ShouldBindJSON(&JSONReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	owner, err := server.store.GetContractOwner(ctx, req.ContractID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if owner.Username != authPayload.Username {
+		err = errors.New("you are not the owner of the requested contract")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
 	arg := db.CreatePartyParams{
-		Username:   req.Username,
+		Username:   JSONReq.Username,
 		ContractID: req.ContractID,
+		Role:       db.ContractRoleSignatory,
 	}
 
 	party, err := server.store.CreateParty(ctx, arg)
@@ -31,7 +65,23 @@ func (server *Server) createParty(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, party)
+	contract, err := server.store.GetContract(ctx, req.ContractID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := createPartyResponse{
+		Username: JSONReq.Username,
+		Contract: contract,
+		Party:    party,
+	}
+
+	ctx.JSON(http.StatusCreated, rsp)
 }
 
 type getPartyRequest struct {
@@ -61,7 +111,30 @@ func (server *Server) getParty(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, party)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if party.Username != authPayload.Username {
+		err := errors.New("account doesn't belong to authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	contract, err := server.store.GetContract(ctx, req.ContractID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := createPartyResponse{
+		Username: authPayload.Username,
+		Contract: contract,
+		Party:    party,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
 
 }
 
@@ -87,10 +160,12 @@ func (server *Server) listParties(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.ListPartiesParams{
-		ContractID: UriReq.ContractID,
-		Limit:      req.PageSize,
-		Offset:     (req.PageID - 1) * req.PageSize,
+		Username: authPayload.Username,
+		Limit:    req.PageSize,
+		Offset:   (req.PageID - 1) * req.PageSize,
 	}
 
 	parties, err := server.store.ListParties(ctx, arg)

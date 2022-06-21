@@ -9,6 +9,25 @@ import (
 	"time"
 )
 
+type ContractRole string
+
+const (
+	ContractRoleOwner     ContractRole = "owner"
+	ContractRoleSignatory ContractRole = "signatory"
+)
+
+func (e *ContractRole) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ContractRole(s)
+	case string:
+		*e = ContractRole(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ContractRole: %T", src)
+	}
+	return nil
+}
+
 type PeriodUnits string
 
 const (
@@ -50,14 +69,16 @@ func (e *Templates) Scan(src interface{}) error {
 }
 
 type Contract struct {
-	ID       int64     `json:"id"`
-	Template Templates `json:"template"`
+	ID        int64     `json:"id"`
+	Template  Templates `json:"template"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type Party struct {
-	Username   string    `json:"username"`
-	ContractID int64     `json:"contractID"`
-	CreatedAt  time.Time `json:"createdAt"`
+	Username   string       `json:"username"`
+	Role       ContractRole `json:"role"`
+	ContractID int64        `json:"contractID"`
+	CreatedAt  time.Time    `json:"createdAt"`
 }
 
 type PeriodParam struct {

@@ -80,9 +80,9 @@ func TestListParties(t *testing.T) {
 	}
 
 	arg := ListPartiesParams{
-		ContractID: party.ContractID,
-		Limit:      1,
-		Offset:     0,
+		Username: party.Username,
+		Limit:    1,
+		Offset:   0,
 	}
 
 	parties, err := testQueries.ListParties(context.Background(), arg)

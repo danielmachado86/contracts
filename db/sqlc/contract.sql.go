@@ -15,13 +15,13 @@ INSERT INTO contracts (
 ) VALUES (
   $1
 )
-RETURNING id, template
+RETURNING id, template, created_at
 `
 
 func (q *Queries) CreateContract(ctx context.Context, template Templates) (Contract, error) {
 	row := q.db.QueryRowContext(ctx, createContract, template)
 	var i Contract
-	err := row.Scan(&i.ID, &i.Template)
+	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
 	return i, err
 }
 
@@ -36,19 +36,19 @@ func (q *Queries) DeleteContract(ctx context.Context, id int64) error {
 }
 
 const getContract = `-- name: GetContract :one
-SELECT id, template FROM contracts
+SELECT id, template, created_at FROM contracts
 WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetContract(ctx context.Context, id int64) (Contract, error) {
 	row := q.db.QueryRowContext(ctx, getContract, id)
 	var i Contract
-	err := row.Scan(&i.ID, &i.Template)
+	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
 	return i, err
 }
 
 const listContracts = `-- name: ListContracts :many
-SELECT id, template FROM contracts
+SELECT id, template, created_at FROM contracts
 ORDER BY id
 LIMIT $1
 OFFSET $2
@@ -68,7 +68,7 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 	items := []Contract{}
 	for rows.Next() {
 		var i Contract
-		if err := rows.Scan(&i.ID, &i.Template); err != nil {
+		if err := rows.Scan(&i.ID, &i.Template, &i.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -85,7 +85,7 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 const updateContract = `-- name: UpdateContract :one
 UPDATE contracts SET template = $2
 WHERE id = $1
-RETURNING id, template
+RETURNING id, template, created_at
 `
 
 type UpdateContractParams struct {
@@ -96,6 +96,6 @@ type UpdateContractParams struct {
 func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error) {
 	row := q.db.QueryRowContext(ctx, updateContract, arg.ID, arg.Template)
 	var i Contract
-	err := row.Scan(&i.ID, &i.Template)
+	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
 	return i, err
 }

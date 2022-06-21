@@ -20,6 +20,7 @@ type Querier interface {
 	DeleteTimeParam(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, username string) error
 	GetContract(ctx context.Context, id int64) (Contract, error)
+	GetContractOwner(ctx context.Context, contractID int64) (Party, error)
 	GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
 	GetPeriodParam(ctx context.Context, id int64) (PeriodParam, error)
 	GetTimeParam(ctx context.Context, id int64) (TimeParam, error)

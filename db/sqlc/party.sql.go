@@ -12,22 +12,29 @@ import (
 const createParty = `-- name: CreateParty :one
 INSERT INTO parties (
   username,
-  contract_id
+  contract_id,
+  role
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
-RETURNING username, contract_id, created_at
+RETURNING username, role, contract_id, created_at
 `
 
 type CreatePartyParams struct {
-	Username   string `json:"username"`
-	ContractID int64  `json:"contractID"`
+	Username   string       `json:"username"`
+	ContractID int64        `json:"contractID"`
+	Role       ContractRole `json:"role"`
 }
 
 func (q *Queries) CreateParty(ctx context.Context, arg CreatePartyParams) (Party, error) {
-	row := q.db.QueryRowContext(ctx, createParty, arg.Username, arg.ContractID)
+	row := q.db.QueryRowContext(ctx, createParty, arg.Username, arg.ContractID, arg.Role)
 	var i Party
-	err := row.Scan(&i.Username, &i.ContractID, &i.CreatedAt)
+	err := row.Scan(
+		&i.Username,
+		&i.Role,
+		&i.ContractID,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
@@ -46,8 +53,25 @@ func (q *Queries) DeleteParty(ctx context.Context, arg DeletePartyParams) error 
 	return err
 }
 
+const getContractOwner = `-- name: GetContractOwner :one
+SELECT username, role, contract_id, created_at FROM parties
+WHERE contract_id = $1 AND role = 'owner' LIMIT 1
+`
+
+func (q *Queries) GetContractOwner(ctx context.Context, contractID int64) (Party, error) {
+	row := q.db.QueryRowContext(ctx, getContractOwner, contractID)
+	var i Party
+	err := row.Scan(
+		&i.Username,
+		&i.Role,
+		&i.ContractID,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getParty = `-- name: GetParty :one
-SELECT username, contract_id, created_at FROM parties
+SELECT username, role, contract_id, created_at FROM parties
 WHERE username = $1 AND contract_id = $2 LIMIT 1
 `
 
@@ -59,26 +83,31 @@ type GetPartyParams struct {
 func (q *Queries) GetParty(ctx context.Context, arg GetPartyParams) (Party, error) {
 	row := q.db.QueryRowContext(ctx, getParty, arg.Username, arg.ContractID)
 	var i Party
-	err := row.Scan(&i.Username, &i.ContractID, &i.CreatedAt)
+	err := row.Scan(
+		&i.Username,
+		&i.Role,
+		&i.ContractID,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const listParties = `-- name: ListParties :many
-SELECT username, contract_id, created_at FROM parties
-WHERE contract_id = $1
-ORDER BY username
+SELECT username, role, contract_id, created_at FROM parties
+WHERE username = $1
+ORDER BY contract_id
 LIMIT $2
 OFFSET $3
 `
 
 type ListPartiesParams struct {
-	ContractID int64 `json:"contractID"`
-	Limit      int32 `json:"limit"`
-	Offset     int32 `json:"offset"`
+	Username string `json:"username"`
+	Limit    int32  `json:"limit"`
+	Offset   int32  `json:"offset"`
 }
 
 func (q *Queries) ListParties(ctx context.Context, arg ListPartiesParams) ([]Party, error) {
-	rows, err := q.db.QueryContext(ctx, listParties, arg.ContractID, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listParties, arg.Username, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +115,12 @@ func (q *Queries) ListParties(ctx context.Context, arg ListPartiesParams) ([]Par
 	items := []Party{}
 	for rows.Next() {
 		var i Party
-		if err := rows.Scan(&i.Username, &i.ContractID, &i.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&i.Username,
+			&i.Role,
+			&i.ContractID,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

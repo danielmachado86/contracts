@@ -195,6 +195,21 @@ func (mr *MockStoreMockRecorder) GetContract(arg0, arg1 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContract", reflect.TypeOf((*MockStore)(nil).GetContract), arg0, arg1)
 }
 
+// GetContractOwner mocks base method.
+func (m *MockStore) GetContractOwner(arg0 context.Context, arg1 int64) (db.Party, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetContractOwner", arg0, arg1)
+	ret0, _ := ret[0].(db.Party)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContractOwner indicates an expected call of GetContractOwner.
+func (mr *MockStoreMockRecorder) GetContractOwner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetContractOwner", reflect.TypeOf((*MockStore)(nil).GetContractOwner), arg0, arg1)
+}
+
 // GetParty mocks base method.
 func (m *MockStore) GetParty(arg0 context.Context, arg1 db.GetPartyParams) (db.Party, error) {
 	m.ctrl.T.Helper()

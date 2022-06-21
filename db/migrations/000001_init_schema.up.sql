@@ -10,9 +10,15 @@ CREATE TYPE "period_units" AS ENUM (
   'years'
 );
 
+CREATE TYPE "contract_role" AS ENUM (
+  'owner',
+  'signatory'
+);
+
 CREATE TABLE "contracts" (
   "id" bigserial PRIMARY KEY,
-  "template" templates NOT NULL
+  "template" templates NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "period_params" (
@@ -50,6 +56,7 @@ CREATE TABLE "users" (
 
 CREATE TABLE "parties" (
   "username" varchar NOT NULL,
+  "role" contract_role NOT NULL,
   "contract_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   PRIMARY KEY ("username", "contract_id")

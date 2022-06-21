@@ -1,9 +1,10 @@
 -- name: CreateParty :one
 INSERT INTO parties (
   username,
-  contract_id
+  contract_id,
+  role
 ) VALUES (
-  $1, $2
+  $1, $2, $3
 )
 RETURNING *;
 
@@ -11,10 +12,14 @@ RETURNING *;
 SELECT * FROM parties
 WHERE username = $1 AND contract_id = $2 LIMIT 1;
 
+-- name: GetContractOwner :one
+SELECT * FROM parties
+WHERE contract_id = $1 AND role = 'owner' LIMIT 1;
+
 -- name: ListParties :many
 SELECT * FROM parties
-WHERE contract_id = $1
-ORDER BY username
+WHERE username = $1
+ORDER BY contract_id
 LIMIT $2
 OFFSET $3;
 

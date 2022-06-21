@@ -5,11 +5,18 @@ import (
 	"net/http"
 
 	db "github.com/danielmachado86/contracts/db/sqlc"
+	"github.com/danielmachado86/contracts/token"
 	"github.com/gin-gonic/gin"
 )
 
 type createContractRequest struct {
 	Template string `json:"template" binding:"required,oneof=rental freelance services"`
+}
+
+type createContractResponse struct {
+	Username string      `json:"username"`
+	Contract db.Contract `json:"contract"`
+	Party    db.Party    `json:"party"`
 }
 
 func (server *Server) createContract(ctx *gin.Context) {
@@ -25,7 +32,27 @@ func (server *Server) createContract(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, contract)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	arg := db.CreatePartyParams{
+		Username:   authPayload.Username,
+		ContractID: contract.ID,
+		Role:       "owner",
+	}
+
+	party, err := server.store.CreateParty(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	rsp := createContractResponse{
+		Username: authPayload.Username,
+		Contract: contract,
+		Party:    party,
+	}
+
+	ctx.JSON(http.StatusCreated, rsp)
 }
 
 type getContractRequest struct {

@@ -37,19 +37,22 @@ func (server *Server) setupRouter() {
 
 	router.POST("/users/login", server.loginUser)
 	router.POST("/users", server.createUser)
-	router.GET("/users/:username", server.getUser)
 
-	router.POST("/contracts", server.createContract)
-	router.GET("/contracts/:id", server.getContract)
-	router.GET("/contracts", server.listContract)
+	authRoutes := router.Group("/").Use(authMiddleWare(server.tokenMaker))
 
-	router.PUT("/contracts/:id/users/:username", server.createParty)
-	router.GET("/contracts/:id/users/:username", server.getParty)
-	router.GET("/contracts/:id/users", server.listParties)
+	authRoutes.GET("/users/:username", server.getUser)
 
-	router.POST("/contracts/:id/periods", server.createPeriodParam)
-	router.GET("/periods/:id", server.getPeriodParam)
-	router.GET("/contracts/:id/periods", server.listPeriodParam)
+	authRoutes.POST("/contracts", server.createContract)
+	authRoutes.GET("/contracts/:id", server.getContract)
+	authRoutes.GET("/contracts", server.listContract)
+
+	authRoutes.PUT("/contracts/:id/users/:username", server.createParty)
+	authRoutes.GET("/contracts/:id/users/:username", server.getParty)
+	authRoutes.GET("/contracts/:id/users", server.listParties)
+
+	authRoutes.POST("/contracts/:id/periods", server.createPeriodParam)
+	authRoutes.GET("/periods/:id", server.getPeriodParam)
+	authRoutes.GET("/contracts/:id/periods", server.listPeriodParam)
 
 	server.router = router
 
