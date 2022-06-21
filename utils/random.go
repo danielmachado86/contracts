@@ -37,6 +37,16 @@ func RandomUser() string {
 	return RandomString(6)
 }
 
+func RandomRole() string {
+	roles := make([]string, 0)
+	roles = append(
+		roles,
+		"owner",
+		"signatory",
+	)
+	return roles[rand.Intn(len(roles))]
+}
+
 func RandomUnits() string {
 	units := []string{"days", "months", "years"}
 	n := len(units)

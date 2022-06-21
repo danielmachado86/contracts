@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/danielmachado86/contracts/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,6 +17,7 @@ func createRandomParty(t *testing.T) Party {
 	args := CreatePartyParams{
 		Username:   user1.Username,
 		ContractID: contract.ID,
+		Role:       ContractRole(utils.RandomRole()),
 	}
 	party, err := testQueries.CreateParty(context.Background(), args)
 	require.NoError(t, err)
