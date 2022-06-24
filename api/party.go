@@ -17,12 +17,6 @@ type createPartyJSONRequest struct {
 	Username string `json:"username" binding:"required"`
 }
 
-type createPartyResponse struct {
-	Username string      `json:"username"`
-	Contract db.Contract `json:"contract"`
-	Party    db.Party    `json:"party"`
-}
-
 func (server *Server) createParty(ctx *gin.Context) {
 	var req createPartyRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -65,23 +59,7 @@ func (server *Server) createParty(ctx *gin.Context) {
 		return
 	}
 
-	contract, err := server.store.GetContract(ctx, req.ContractID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	rsp := createPartyResponse{
-		Username: JSONReq.Username,
-		Contract: contract,
-		Party:    party,
-	}
-
-	ctx.JSON(http.StatusCreated, rsp)
+	ctx.JSON(http.StatusCreated, party)
 }
 
 type getPartyRequest struct {
@@ -118,23 +96,7 @@ func (server *Server) getParty(ctx *gin.Context) {
 		return
 	}
 
-	contract, err := server.store.GetContract(ctx, req.ContractID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	rsp := createPartyResponse{
-		Username: authPayload.Username,
-		Contract: contract,
-		Party:    party,
-	}
-
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusOK, party)
 
 }
 
@@ -160,15 +122,15 @@ func (server *Server) listParties(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	// authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	arg := db.ListPartiesParams{
-		Username: authPayload.Username,
-		Limit:    req.PageSize,
-		Offset:   (req.PageID - 1) * req.PageSize,
+	arg := db.ListContractPartiesParams{
+		ContractID: UriReq.ContractID,
+		Limit:      req.PageSize,
+		Offset:     (req.PageID - 1) * req.PageSize,
 	}
 
-	parties, err := server.store.ListParties(ctx, arg)
+	parties, err := server.store.ListContractParties(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

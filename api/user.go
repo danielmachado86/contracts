@@ -42,12 +42,14 @@ func newUserResponse(user db.User) userResponse {
 func (server *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logger.Errorf("failed to unmarshal createUser request body")
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	hashedPassword, err := utils.HashPasword(req.Password)
 	if err != nil {
+		server.logger.Errorf("failed to hash password")
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -65,13 +67,17 @@ func (server *Server) createUser(ctx *gin.Context) {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
 			case "unique_violation":
+				server.logger.Errorf("failure creating user caused by unique constraint violation")
 				ctx.JSON(http.StatusConflict, errorResponse(err))
 				return
 			}
 		}
+		server.logger.Errorf("failed to create user")
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	server.logger.Infof("user %s succesfully created", req.Username)
 
 	rsp := newUserResponse(user)
 	ctx.JSON(http.StatusOK, rsp)
@@ -90,21 +96,25 @@ type loginUserResponse struct {
 func (server *Server) loginUser(ctx *gin.Context) {
 	var req loginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logger.Errorf("failed to unmarshal loginUser request body")
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	}
 
 	user, err := server.store.GetUser(ctx, req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			server.logger.Errorf("user %s not found", req.Username)
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
+		server.logger.Errorf("failed to check if user exists")
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	err = utils.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
+		server.logger.Errorf("user %s not authorized", req.Username)
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
@@ -114,6 +124,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		server.config.AccessTokenDuration,
 	)
 	if err != nil {
+		server.logger.Errorf("failed to create token", req.Username)
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 	}
 
@@ -122,5 +133,6 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		User:        newUserResponse(user),
 	}
 
+	server.logger.Infof("user %s succesfully authenticated", req.Username)
 	ctx.JSON(http.StatusOK, rsp)
 }

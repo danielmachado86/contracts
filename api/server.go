@@ -7,6 +7,7 @@ import (
 	"github.com/danielmachado86/contracts/token"
 	"github.com/danielmachado86/contracts/utils"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -14,6 +15,7 @@ type Server struct {
 	store      db.Store
 	tokenMaker token.Maker
 	router     *gin.Engine
+	logger     *zap.SugaredLogger
 }
 
 func NewServer(config utils.Config, store db.Store) (*Server, error) {
@@ -21,10 +23,20 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
+
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		return nil, fmt.Errorf("cannot create logger: %w", err)
+	}
+	defer logger.Sync()
+
+	sugar := logger.Sugar()
+
 	server := &Server{
 		config:     config,
 		store:      store,
 		tokenMaker: tokenMaker,
+		logger:     sugar,
 	}
 
 	server.setupRouter()
@@ -44,7 +56,7 @@ func (server *Server) setupRouter() {
 	authRoutes.GET("/contracts/:id", server.getContract)
 	authRoutes.GET("/contracts", server.listContract)
 
-	authRoutes.PUT("/contracts/:id/users/:username", server.createParty)
+	authRoutes.POST("/contracts/:id/users", server.createParty)
 	authRoutes.GET("/contracts/:id/users/:username", server.getParty)
 	authRoutes.GET("/contracts/:id/users", server.listParties)
 
@@ -57,6 +69,7 @@ func (server *Server) setupRouter() {
 }
 
 func (server *Server) Start(address string) error {
+	server.logger.Infof("starting server...")
 	return server.router.Run(address)
 }
 

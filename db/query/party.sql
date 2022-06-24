@@ -16,10 +16,10 @@ WHERE username = $1 AND contract_id = $2 LIMIT 1;
 SELECT * FROM parties
 WHERE contract_id = $1 AND role = 'owner' LIMIT 1;
 
--- name: ListParties :many
+-- name: ListContractParties :many
 SELECT * FROM parties
-WHERE username = $1
-ORDER BY contract_id
+WHERE contract_id = $1
+ORDER BY username
 LIMIT $2
 OFFSET $3;
 

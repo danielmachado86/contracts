@@ -47,6 +47,17 @@ func RandomRole() string {
 	return roles[rand.Intn(len(roles))]
 }
 
+func RandomTemplate() string {
+	templates := make([]string, 0)
+	templates = append(
+		templates,
+		"rental",
+		"freelance",
+		"services",
+	)
+	return templates[rand.Intn(len(templates))]
+}
+
 func RandomUnits() string {
 	units := []string{"days", "months", "years"}
 	n := len(units)

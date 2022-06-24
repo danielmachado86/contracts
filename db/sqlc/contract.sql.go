@@ -10,16 +10,30 @@ import (
 )
 
 const createContract = `-- name: CreateContract :one
-INSERT INTO contracts (
-  template
-) VALUES (
-  $1
+WITH contracts AS (
+  INSERT INTO contracts
+    (template)
+  VALUES
+    ($1)
+  RETURNING id, template, created_at),
+parties AS (
+  INSERT INTO parties
+    (username, contract_id, role)
+  SELECT $2, id, 'owner' FROM contracts
+  RETURNING username, role, contract_id, created_at
 )
-RETURNING id, template, created_at
+SELECT id, template, created_at
+FROM contracts
+LIMIT 1
 `
 
-func (q *Queries) CreateContract(ctx context.Context, template Templates) (Contract, error) {
-	row := q.db.QueryRowContext(ctx, createContract, template)
+type CreateContractParams struct {
+	Template Templates `json:"template"`
+	Username string    `json:"username"`
+}
+
+func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
+	row := q.db.QueryRowContext(ctx, createContract, arg.Template, arg.Username)
 	var i Contract
 	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
 	return i, err
@@ -48,19 +62,22 @@ func (q *Queries) GetContract(ctx context.Context, id int64) (Contract, error) {
 }
 
 const listContracts = `-- name: ListContracts :many
-SELECT id, template, created_at FROM contracts
-ORDER BY id
-LIMIT $1
-OFFSET $2
+SELECT contracts.id, contracts.template, contracts.created_at 
+  FROM parties JOIN contracts ON parties.contract_id = contracts.id
+  WHERE parties.username = $1
+  ORDER BY contracts.created_at
+  LIMIT $2
+  OFFSET $3
 `
 
 type ListContractsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Username string `json:"username"`
+	Limit    int32  `json:"limit"`
+	Offset   int32  `json:"offset"`
 }
 
 func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([]Contract, error) {
-	rows, err := q.db.QueryContext(ctx, listContracts, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listContracts, arg.Username, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

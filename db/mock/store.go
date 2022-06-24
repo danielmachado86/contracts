@@ -36,7 +36,7 @@ func (m *MockStore) EXPECT() *MockStoreMockRecorder {
 }
 
 // CreateContract mocks base method.
-func (m *MockStore) CreateContract(arg0 context.Context, arg1 db.Templates) (db.Contract, error) {
+func (m *MockStore) CreateContract(arg0 context.Context, arg1 db.CreateContractParams) (db.Contract, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateContract", arg0, arg1)
 	ret0, _ := ret[0].(db.Contract)
@@ -270,6 +270,21 @@ func (mr *MockStoreMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockStore)(nil).GetUser), arg0, arg1)
 }
 
+// ListContractParties mocks base method.
+func (m *MockStore) ListContractParties(arg0 context.Context, arg1 db.ListContractPartiesParams) ([]db.Party, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListContractParties", arg0, arg1)
+	ret0, _ := ret[0].([]db.Party)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListContractParties indicates an expected call of ListContractParties.
+func (mr *MockStoreMockRecorder) ListContractParties(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListContractParties", reflect.TypeOf((*MockStore)(nil).ListContractParties), arg0, arg1)
+}
+
 // ListContracts mocks base method.
 func (m *MockStore) ListContracts(arg0 context.Context, arg1 db.ListContractsParams) ([]db.Contract, error) {
 	m.ctrl.T.Helper()
@@ -283,21 +298,6 @@ func (m *MockStore) ListContracts(arg0 context.Context, arg1 db.ListContractsPar
 func (mr *MockStoreMockRecorder) ListContracts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListContracts", reflect.TypeOf((*MockStore)(nil).ListContracts), arg0, arg1)
-}
-
-// ListParties mocks base method.
-func (m *MockStore) ListParties(arg0 context.Context, arg1 db.ListPartiesParams) ([]db.Party, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListParties", arg0, arg1)
-	ret0, _ := ret[0].([]db.Party)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListParties indicates an expected call of ListParties.
-func (mr *MockStoreMockRecorder) ListParties(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListParties", reflect.TypeOf((*MockStore)(nil).ListParties), arg0, arg1)
 }
 
 // ListPeriodParams mocks base method.

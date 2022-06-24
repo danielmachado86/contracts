@@ -13,11 +13,12 @@ import (
 func createRandomParty(t *testing.T) Party {
 	user1 := createRandomUser(t)
 	contract := createRandomContract(t)
+	role := utils.RandomRole()
 
 	args := CreatePartyParams{
 		Username:   user1.Username,
 		ContractID: contract.ID,
-		Role:       ContractRole(utils.RandomRole()),
+		Role:       ContractRole(role),
 	}
 	party, err := testQueries.CreateParty(context.Background(), args)
 	require.NoError(t, err)
@@ -73,25 +74,4 @@ func TestDeleteParty(t *testing.T) {
 	require.Error(t, err)
 	require.EqualError(t, err, sql.ErrNoRows.Error())
 	require.Empty(t, party2)
-}
-
-func TestListParties(t *testing.T) {
-	var party Party
-	for i := 0; i < 10; i++ {
-		party = createRandomParty(t)
-	}
-
-	arg := ListPartiesParams{
-		Username: party.Username,
-		Limit:    1,
-		Offset:   0,
-	}
-
-	parties, err := testQueries.ListParties(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, parties, 1)
-
-	for _, contract := range parties {
-		require.NotEmpty(t, contract)
-	}
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	db "github.com/danielmachado86/contracts/db/sqlc"
@@ -10,46 +11,43 @@ import (
 )
 
 type createContractRequest struct {
-	Template string `json:"template" binding:"required,oneof=rental freelance services"`
+	Template db.Templates `json:"template" binding:"required,oneof=rental freelance services"`
 }
 
 type createContractResponse struct {
 	Username string      `json:"username"`
 	Contract db.Contract `json:"contract"`
-	Party    db.Party    `json:"party"`
+	Party    string      `json:"party"`
 }
 
 func (server *Server) createContract(ctx *gin.Context) {
 	var req createContractRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
+		server.logger.Errorf("failed to unmarshal createContract request body")
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	contract, err := server.store.CreateContract(ctx, db.TemplatesRental)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	arg := db.CreatePartyParams{
-		Username:   authPayload.Username,
-		ContractID: contract.ID,
-		Role:       "owner",
+	arg := db.CreateContractParams{
+		Template: req.Template,
+		Username: authPayload.Username,
 	}
 
-	party, err := server.store.CreateParty(ctx, arg)
+	contract, err := server.store.CreateContract(ctx, arg)
 	if err != nil {
+		server.logger.Errorf("failed to create contract")
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
+	ownerURL := fmt.Sprintf("http://localhost:8080/contracts/%d/users/%s", contract.ID, authPayload.Username)
+
 	rsp := createContractResponse{
 		Username: authPayload.Username,
 		Contract: contract,
-		Party:    party,
+		Party:    ownerURL,
 	}
 
 	ctx.JSON(http.StatusCreated, rsp)
@@ -92,9 +90,12 @@ func (server *Server) listContract(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.ListContractsParams{
-		Limit:  req.PageSize,
-		Offset: (req.PageID - 1) * req.PageSize,
+		Username: authPayload.Username,
+		Limit:    req.PageSize,
+		Offset:   (req.PageID - 1) * req.PageSize,
 	}
 
 	contracts, err := server.store.ListContracts(ctx, arg)

@@ -9,7 +9,7 @@ import (
 )
 
 type Querier interface {
-	CreateContract(ctx context.Context, template Templates) (Contract, error)
+	CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error)
 	CreateParty(ctx context.Context, arg CreatePartyParams) (Party, error)
 	CreatePeriodParam(ctx context.Context, arg CreatePeriodParamParams) (PeriodParam, error)
 	CreateTimeParam(ctx context.Context, arg CreateTimeParamParams) (TimeParam, error)
@@ -25,8 +25,8 @@ type Querier interface {
 	GetPeriodParam(ctx context.Context, id int64) (PeriodParam, error)
 	GetTimeParam(ctx context.Context, id int64) (TimeParam, error)
 	GetUser(ctx context.Context, username string) (User, error)
+	ListContractParties(ctx context.Context, arg ListContractPartiesParams) ([]Party, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]Contract, error)
-	ListParties(ctx context.Context, arg ListPartiesParams) ([]Party, error)
 	ListPeriodParams(ctx context.Context, arg ListPeriodParamsParams) ([]PeriodParam, error)
 	ListTimeParams(ctx context.Context, arg ListTimeParamsParams) ([]TimeParam, error)
 	UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)

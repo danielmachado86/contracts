@@ -9,7 +9,12 @@ import (
 )
 
 func createRandomContract(t *testing.T) Contract {
-	contract, err := testQueries.CreateContract(context.Background(), TemplatesRental)
+	user := createRandomUser(t)
+	arg := CreateContractParams{
+		Template: TemplatesRental,
+		Username: user.Username,
+	}
+	contract, err := testQueries.CreateContract(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, contract)
 
@@ -66,13 +71,18 @@ func TestDeleteContract(t *testing.T) {
 }
 
 func TestListContract(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		createRandomContract(t)
-	}
 
 	arg := ListContractsParams{
-		Limit:  5,
-		Offset: 5,
+		Username: "username",
+		Limit:    5,
+		Offset:   5,
+	}
+
+	_, err := testFailingQueries.ListContracts(context.Background(), arg)
+	require.Error(t, err)
+
+	for i := 0; i < 10; i++ {
+		createRandomContract(t)
 	}
 
 	contracts, err := testQueries.ListContracts(context.Background(), arg)

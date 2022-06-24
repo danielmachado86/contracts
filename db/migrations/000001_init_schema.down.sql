@@ -6,3 +6,4 @@ DROP TABLE IF EXISTS contracts;
 DROP TABLE IF EXISTS users;
 DROP TYPE IF EXISTS period_units;
 DROP TYPE IF EXISTS templates;
+DROP TYPE IF EXISTS contract_role;

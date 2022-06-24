@@ -84,4 +84,4 @@ ALTER TABLE "time_params" ADD FOREIGN KEY ("contract_id") REFERENCES "contracts"
 
 ALTER TABLE "parties" ADD FOREIGN KEY ("username") REFERENCES "users" ("username");
 
-ALTER TABLE "parties" ADD FOREIGN KEY ("contract_id") REFERENCES "contracts" ("id");
+ALTER TABLE "parties" ADD FOREIGN KEY ("contract_id") REFERENCES "contracts" ("id") ON DELETE CASCADE;
