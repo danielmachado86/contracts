@@ -72,11 +72,12 @@ func TestDeleteContract(t *testing.T) {
 }
 
 func TestListContract(t *testing.T) {
+	username := utils.RandomUser()
 
 	arg0 := CreateUserParams{
 		Name:           utils.RandomString(6),
 		LastName:       utils.RandomString(6),
-		Username:       "username",
+		Username:       username,
 		Email:          utils.RandomEmail(),
 		HashedPassword: "password",
 	}
@@ -85,7 +86,7 @@ func TestListContract(t *testing.T) {
 	require.NotEmpty(t, user)
 
 	arg1 := ListContractsParams{
-		Username: "username",
+		Username: username,
 		Limit:    5,
 		Offset:   5,
 	}
@@ -96,7 +97,7 @@ func TestListContract(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		arg := CreateContractParams{
 			Template: Templates(utils.RandomTemplate()),
-			Username: "username",
+			Username: username,
 		}
 
 		contract, err := testQueries.CreateContract(context.Background(), arg)

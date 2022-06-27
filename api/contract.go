@@ -23,7 +23,7 @@ type createContractResponse struct {
 func (server *Server) createContract(ctx *gin.Context) {
 	var req createContractRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		server.logger.Errorf("failed to unmarshal createContract request body")
+		server.Logger.Errorf("failed to unmarshal createContract request body")
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
@@ -37,7 +37,7 @@ func (server *Server) createContract(ctx *gin.Context) {
 
 	contract, err := server.store.CreateContract(ctx, arg)
 	if err != nil {
-		server.logger.Errorf("failed to create contract")
+		server.Logger.Errorf("failed to create contract")
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
