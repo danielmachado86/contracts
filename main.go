@@ -27,8 +27,8 @@ func main() {
 		server.Logger.Fatalf("cannot connect to db:", err)
 	}
 	store := db.NewStore(conn)
-	err = server.ConfigServer(config, store)
 	server.Logger.Infof("configuring server...")
+	err = server.ConfigServer(config, store)
 	if err != nil {
 		server.Logger.Fatalf("cannot configure server", err)
 	}
