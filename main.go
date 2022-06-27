@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"log"
 
 	"github.com/danielmachado86/contracts/api"
 	db "github.com/danielmachado86/contracts/db/sqlc"
@@ -11,22 +10,32 @@ import (
 )
 
 func main() {
+
+	server, err := api.NewServer()
+	server.Logger.Infof("creating server...")
+	if err != nil {
+		server.Logger.Fatalf("cannot create server:", err)
+	}
+
 	config, err := utils.LoadConfig("./.env")
 	if err != nil {
-		log.Fatal("cannot load config:", err)
+		server.Logger.Fatalf("cannot load config:", err)
 	}
 
 	conn, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
-		log.Fatal("cannot connect to db:", err)
+		server.Logger.Fatalf("cannot connect to db:", err)
 	}
 	store := db.NewStore(conn)
-	server, err := api.NewServer(config, store)
+	err = server.ConfigServer(config, store)
+	server.Logger.Infof("configuring server...")
 	if err != nil {
-		log.Fatal("cannot create server", err)
+		server.Logger.Fatalf("cannot configure server", err)
 	}
+	server.Logger.Infof("server listening for requests...")
 	err = server.Start(config.ServerAddress)
 	if err != nil {
-		log.Fatal("cannot start server:", err)
+		server.Logger.Fatalf("cannot start server:", err)
 	}
+
 }

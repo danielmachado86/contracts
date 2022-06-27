@@ -15,15 +15,10 @@ type Server struct {
 	store      db.Store
 	tokenMaker token.Maker
 	router     *gin.Engine
-	logger     *zap.SugaredLogger
+	Logger     *zap.SugaredLogger
 }
 
-func NewServer(config utils.Config, store db.Store) (*Server, error) {
-	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create token maker: %w", err)
-	}
-
+func NewServer() (*Server, error) {
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		return nil, fmt.Errorf("cannot create logger: %w", err)
@@ -33,15 +28,27 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 	sugar := logger.Sugar()
 
 	server := &Server{
-		config:     config,
-		store:      store,
-		tokenMaker: tokenMaker,
-		logger:     sugar,
+		Logger: sugar,
 	}
 
 	server.setupRouter()
 
 	return server, nil
+}
+
+func (server *Server) ConfigServer(config utils.Config, store db.Store) error {
+	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
+	if err != nil {
+		return fmt.Errorf("cannot create token maker: %w", err)
+	}
+
+	server.tokenMaker = tokenMaker
+	server.config = config
+	server.store = store
+
+	server.setupRouter()
+
+	return nil
 }
 
 func (server *Server) setupRouter() {
@@ -69,8 +76,8 @@ func (server *Server) setupRouter() {
 }
 
 func (server *Server) Start(address string) error {
-	server.logger.Infof("starting server...")
-	return server.router.Run(address)
+	err := server.router.Run(address)
+	return err
 }
 
 func errorResponse(err error) gin.H {
