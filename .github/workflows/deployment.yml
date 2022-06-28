@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@master
       with:
         role-to-assume: arn:aws:iam::176997018824:role/github-actions-role
         aws-region: us-east-1
