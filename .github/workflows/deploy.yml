@@ -1,17 +1,27 @@
-name: Deploy to production
+name: Deploy to Amazon ECS
 
 on:
   push:
     branches: [ master ]
 
-jobs:
+env:
+  AWS_REGION: us-east-1                   # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: contracts           # set this to your Amazon ECR repository name
+  ECS_SERVICE: contracts-ecs-service                 # set this to your Amazon ECS service name
+  ECS_CLUSTER: contracts-ecs-cluster                 # set this to your Amazon ECS cluster name
+  ECS_TASK_DEFINITION: contracts-ecs-task # set this to the path to your Amazon ECS task definition
+                                               # file, e.g. .aws/task-definition.json
+  CONTAINER_NAME: contracts-ecs-container           # set this to the name of the container in the
+                                               # containerDefinitions section of your task definition
+permissions:
+  id-token: write
+  contents: read
 
-  build:
-    name: Build image
+jobs:
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
+    environment: production
 
     steps:
     - name: Check out code
@@ -30,11 +40,31 @@ jobs:
     - name: Load secrets and save to a app.env
       run: aws secretsmanager get-secret-value --secret-id contracts --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > .env/app.env
 
-    - name: Build, tag, and push docker image to Amazon ECR
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
       env:
-        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        REPOSITORY: contracts
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
-        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+        # Build a docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+    
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ env.ECS_TASK_DEFINITION }}
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
