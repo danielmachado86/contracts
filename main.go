@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/danielmachado86/contracts/api"
 	db "github.com/danielmachado86/contracts/db/sqlc"
@@ -33,7 +34,7 @@ func main() {
 		server.Logger.Fatalf("cannot configure server", err)
 	}
 	server.Logger.Infof("server listening for requests...")
-	err = server.Start(config.ServerAddress)
+	err = server.Start(fmt.Sprintf("%s/v1", config.ServerAddress))
 	if err != nil {
 		server.Logger.Fatalf("cannot start server:", err)
 	}
