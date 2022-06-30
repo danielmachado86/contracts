@@ -54,23 +54,23 @@ func (server *Server) ConfigServer(config utils.Config, store db.Store) error {
 func (server *Server) setupRouter() {
 	router := gin.Default()
 
-	router.POST("/users/login", server.loginUser)
-	router.POST("/users", server.createUser)
-	router.GET("/health", server.healthCheck)
+	router.POST("v1/users/login", server.loginUser)
+	router.POST("v1/users", server.createUser)
+	router.GET("v1/health", server.healthCheck)
 
 	authRoutes := router.Group("/").Use(authMiddleWare(server.tokenMaker))
 
-	authRoutes.POST("/contracts", server.createContract)
-	authRoutes.GET("/contracts/:id", server.getContract)
-	authRoutes.GET("/contracts", server.listContract)
+	authRoutes.POST("v1/contracts", server.createContract)
+	authRoutes.GET("v1/contracts/:id", server.getContract)
+	authRoutes.GET("v1/contracts", server.listContract)
 
-	authRoutes.POST("/contracts/:id/users", server.createParty)
-	authRoutes.GET("/contracts/:id/users/:username", server.getParty)
-	authRoutes.GET("/contracts/:id/users", server.listParties)
+	authRoutes.POST("v1/contracts/:id/users", server.createParty)
+	authRoutes.GET("v1/contracts/:id/users/:username", server.getParty)
+	authRoutes.GET("v1/contracts/:id/users", server.listParties)
 
-	authRoutes.POST("/contracts/:id/periods", server.createPeriodParam)
-	authRoutes.GET("/periods/:id", server.getPeriodParam)
-	authRoutes.GET("/contracts/:id/periods", server.listPeriodParam)
+	authRoutes.POST("v1/contracts/:id/periods", server.createPeriodParam)
+	authRoutes.GET("v1/periods/:id", server.getPeriodParam)
+	authRoutes.GET("v1/contracts/:id/periods", server.listPeriodParam)
 
 	server.router = router
 
