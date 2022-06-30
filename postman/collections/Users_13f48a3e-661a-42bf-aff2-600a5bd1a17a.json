@@ -1,0 +1,329 @@
+{
+	"info": {
+		"_postman_id": "1786424d-627b-4315-9c2b-13832ab9b917",
+		"name": "Users",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "Creates a new user",
+					"id": "701d38e4-76e4-4a43-bce6-3b7324a69372",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"Daniel\",\n  \"last_name\": \"Machado\",\n  \"username\": \"dmachadoc\",\n  \"email\": \"dmachadoc@outlook.com\",\n  \"password\": \"secret\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "818269d4-92e1-426e-af77-b210070d9b1e",
+							"name": "User resource created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: basic",
+										"key": "Authorization",
+										"value": "Basic <credentials>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"first_name\": \"aliqua veniam\",\n  \"last_name\": \"ea Lorem veniam\",\n  \"username\": \"minim\",\n  \"email\": \"enim nostrud incididunt\",\n  \"password\": \"est mollit enim amet\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"responseTime": null,
+							"body": "{\n  \"first_name\": \"laboris veniam voluptate in\",\n  \"last_name\": \"consectetur nostrud nulla aliquip mollit\",\n  \"username\": \"aute sed labore minim\",\n  \"email\": \"minim sed ex amet\",\n  \"created_at\": \"fugiat ea id dolor tempor\"\n}"
+						},
+						{
+							"id": "3334fb26-3e98-4ed7-b598-56b5a2885d57",
+							"name": "Bad request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: basic",
+										"key": "Authorization",
+										"value": "Basic <credentials>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"first_name\": \"aliqua veniam\",\n  \"last_name\": \"ea Lorem veniam\",\n  \"username\": \"minim\",\n  \"email\": \"enim nostrud incididunt\",\n  \"password\": \"est mollit enim amet\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"responseTime": null,
+							"body": "{\n  \"code\": 90875340,\n  \"message\": \"sunt nisi in cillum\"\n}"
+						},
+						{
+							"id": "81acdef7-7c44-486f-a274-c5c7de17e4f2",
+							"name": "Unexpected error",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: basic",
+										"key": "Authorization",
+										"value": "Basic <credentials>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"first_name\": \"aliqua veniam\",\n  \"last_name\": \"ea Lorem veniam\",\n  \"username\": \"minim\",\n  \"email\": \"enim nostrud incididunt\",\n  \"password\": \"est mollit enim amet\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/users",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"responseTime": null,
+							"body": "{\n  \"code\": 90875340,\n  \"message\": \"sunt nisi in cillum\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Returns details about a particular user",
+					"id": "0afaef55-cb71-4e71-aa95-88ac0d218bc3",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/users?id=-32544355",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "-32544355",
+									"description": "(Required) ID of the user"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"id": "f61bdf07-3791-415e-b240-a87527430e51",
+							"name": "Sample response: Details about a user by ID",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: basic",
+										"key": "Authorization",
+										"value": "Basic <credentials>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/users?id=-32544355",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "-32544355"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"disabled": false,
+									"description": "A link to the next page of responses",
+									"key": "x-next",
+									"value": "id fugiat aliquip quis eiusmod"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"responseTime": null,
+							"body": "{\n  \"first_name\": \"laboris veniam voluptate in\",\n  \"last_name\": \"consectetur nostrud nulla aliquip mollit\",\n  \"username\": \"aute sed labore minim\",\n  \"email\": \"minim sed ex amet\",\n  \"created_at\": \"fugiat ea id dolor tempor\"\n}"
+						},
+						{
+							"id": "628e27f1-5607-4a6d-90bf-9dc0b97575f6",
+							"name": "Unexpected error",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: basic",
+										"key": "Authorization",
+										"value": "Basic <credentials>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/users?id=-32544355",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"users"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "-32544355"
+										}
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"responseTime": null,
+							"body": "{\n  \"code\": 90875340,\n  \"message\": \"sunt nisi in cillum\"\n}"
+						}
+					]
+				}
+			],
+			"id": "bd345729-b332-4ce3-b540-ee461a4be30c"
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "<Basic Auth Username>",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "<Basic Auth Password>",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"id": "4216687b-f963-4bf4-aa5d-d2eda2280f4d",
+			"key": "baseUrl",
+			"value": "api.fidulancer.com/v1",
+			"type": "string"
+		}
+	]
+}
