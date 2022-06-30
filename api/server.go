@@ -56,9 +56,9 @@ func (server *Server) setupRouter() {
 
 	rVersion := router.Group(fmt.Sprintf("/%s", server.config.ApiVersion))
 
-	router.POST("/users/login", server.loginUser)
-	router.POST("/users", server.createUser)
-	router.GET("/health", server.healthCheck)
+	rVersion.POST("/users/login", server.loginUser)
+	rVersion.POST("/users", server.createUser)
+	rVersion.GET("/health", server.healthCheck)
 
 	authRoutes := rVersion.Group("/").Use(authMiddleWare(server.tokenMaker))
 
