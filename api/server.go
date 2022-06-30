@@ -54,11 +54,13 @@ func (server *Server) ConfigServer(config utils.Config, store db.Store) error {
 func (server *Server) setupRouter() {
 	router := gin.Default()
 
+	rVersion := router.Group(fmt.Sprintf("/%s", server.config.ApiVersion))
+
 	router.POST("/users/login", server.loginUser)
 	router.POST("/users", server.createUser)
 	router.GET("/health", server.healthCheck)
 
-	authRoutes := router.Group("/").Use(authMiddleWare(server.tokenMaker))
+	authRoutes := rVersion.Group("/").Use(authMiddleWare(server.tokenMaker))
 
 	authRoutes.POST("/contracts", server.createContract)
 	authRoutes.GET("/contracts/:id", server.getContract)
