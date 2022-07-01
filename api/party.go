@@ -20,13 +20,13 @@ type createPartyJSONRequest struct {
 func (server *Server) createParty(ctx *gin.Context) {
 	var req createPartyRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	var JSONReq createPartyJSONRequest
 	if err := ctx.ShouldBindJSON(&JSONReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -34,16 +34,16 @@ func (server *Server) createParty(ctx *gin.Context) {
 	owner, err := server.store.GetContractOwner(ctx, req.ContractID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
 	if owner.Username != authPayload.Username {
 		err = errors.New("you are not the owner of the requested contract")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err, http.StatusUnauthorized))
 		return
 	}
 
@@ -55,7 +55,7 @@ func (server *Server) createParty(ctx *gin.Context) {
 
 	party, err := server.store.CreateParty(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -70,7 +70,7 @@ type getPartyRequest struct {
 func (server *Server) getParty(ctx *gin.Context) {
 	var req getPartyRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -82,17 +82,17 @@ func (server *Server) getParty(ctx *gin.Context) {
 	party, err := server.store.GetParty(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	if party.Username != authPayload.Username {
 		err := errors.New("account doesn't belong to authenticated user")
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err, http.StatusUnauthorized))
 		return
 	}
 
@@ -112,13 +112,13 @@ type listPartiesURIRequest struct {
 func (server *Server) listParties(ctx *gin.Context) {
 	var req listPartiesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	var UriReq listPartiesURIRequest
 	if err := ctx.ShouldBindUri(&UriReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -132,7 +132,7 @@ func (server *Server) listParties(ctx *gin.Context) {
 
 	parties, err := server.store.ListContractParties(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
