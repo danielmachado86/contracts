@@ -83,6 +83,9 @@ func (server *Server) Start(address string) error {
 	return err
 }
 
-func errorResponse(err error) gin.H {
-	return gin.H{"error": err.Error()}
+func errorResponse(err error, code int) gin.H {
+	return gin.H{
+		"message": err.Error(),
+		"code":    code,
+	}
 }
