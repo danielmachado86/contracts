@@ -24,7 +24,7 @@ func (server *Server) createContract(ctx *gin.Context) {
 	var req createContractRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.Logger.Errorf("failed to unmarshal createContract request body")
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -38,7 +38,7 @@ func (server *Server) createContract(ctx *gin.Context) {
 	contract, err := server.store.CreateContract(ctx, arg)
 	if err != nil {
 		server.Logger.Errorf("failed to create contract")
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -60,17 +60,17 @@ type getContractRequest struct {
 func (server *Server) getContract(ctx *gin.Context) {
 	var req getContractRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	contract, err := server.store.GetContract(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -86,7 +86,7 @@ type listContractRequest struct {
 func (server *Server) listContract(ctx *gin.Context) {
 	var req listContractRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -100,7 +100,7 @@ func (server *Server) listContract(ctx *gin.Context) {
 
 	contracts, err := server.store.ListContracts(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 

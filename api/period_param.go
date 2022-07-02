@@ -21,12 +21,12 @@ type createPeriodParamUriRequest struct {
 func (server *Server) createPeriodParam(ctx *gin.Context) {
 	var JSONReq createPeriodParamJSONRequest
 	if err := ctx.ShouldBindJSON(&JSONReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 	var UriReq createPeriodParamUriRequest
 	if err := ctx.ShouldBindUri(&UriReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -39,7 +39,7 @@ func (server *Server) createPeriodParam(ctx *gin.Context) {
 
 	period, err := server.store.CreatePeriodParam(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -53,17 +53,17 @@ type getPeriodParamRequest struct {
 func (server *Server) getPeriodParam(ctx *gin.Context) {
 	var req getPeriodParamRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	contract, err := server.store.GetPeriodParam(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -83,13 +83,13 @@ type listPeriodParamUriRequest struct {
 func (server *Server) listPeriodParam(ctx *gin.Context) {
 	var req listPeriodParamRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	var UriReq listPeriodParamUriRequest
 	if err := ctx.ShouldBindQuery(&UriReq); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
@@ -101,7 +101,7 @@ func (server *Server) listPeriodParam(ctx *gin.Context) {
 
 	contracts, err := server.store.ListPeriodParams(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 

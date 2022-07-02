@@ -47,14 +47,14 @@ func (server *Server) createUser(ctx *gin.Context) {
 	var req createUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.Logger.Errorf("failed to unmarshal createUser request body")
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
 	hashedPassword, err := utils.HashPasword(req.Password)
 	if err != nil {
 		server.Logger.Errorf("failed to hash password")
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -72,12 +72,12 @@ func (server *Server) createUser(ctx *gin.Context) {
 			switch pqErr.Code.Name() {
 			case "unique_violation":
 				server.Logger.Errorf("failure creating user caused by unique constraint violation")
-				ctx.JSON(http.StatusConflict, errorResponse(err))
+				ctx.JSON(http.StatusConflict, errorResponse(err, http.StatusConflict))
 				return
 			}
 		}
 		server.Logger.Errorf("failed to create user")
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
@@ -101,25 +101,25 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	var req loginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.Logger.Errorf("failed to unmarshal loginUser request body")
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 	}
 
 	user, err := server.store.GetUser(ctx, req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			server.Logger.Errorf("user %s not found", req.Username)
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
 		}
 		server.Logger.Errorf("failed to check if user exists")
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
 	err = utils.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
 		server.Logger.Errorf("user %s not authorized", req.Username)
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err, http.StatusUnauthorized))
 		return
 	}
 
@@ -129,7 +129,7 @@ func (server *Server) loginUser(ctx *gin.Context) {
 	)
 	if err != nil {
 		server.Logger.Errorf("failed to create token", req.Username)
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 	}
 
 	rsp := loginUserResponse{
