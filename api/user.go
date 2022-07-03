@@ -84,7 +84,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 	server.Logger.Infof("user %s succesfully created", req.Username)
 
 	rsp := newUserResponse(user)
-	ctx.JSON(http.StatusOK, rsp)
+	ctx.JSON(http.StatusCreated, rsp)
 }
 
 type loginUserRequest struct {
