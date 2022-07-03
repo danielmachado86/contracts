@@ -97,7 +97,7 @@ type loginUserResponse struct {
 	User        userResponse `json:"user"`
 }
 
-func (server *Server) loginUser(ctx *gin.Context) {
+func (server *Server) createSessions(ctx *gin.Context) {
 	var req loginUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.Logger.Errorf("failed to unmarshal loginUser request body")
@@ -139,4 +139,8 @@ func (server *Server) loginUser(ctx *gin.Context) {
 
 	server.Logger.Infof("user %s succesfully authenticated", req.Username)
 	ctx.JSON(http.StatusOK, rsp)
+}
+
+func (server *Server) deleteSessions(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, nil)
 }
