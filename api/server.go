@@ -57,7 +57,8 @@ func (server *Server) setupRouter() {
 	rVersion := router.Group(fmt.Sprintf("/%s", server.config.ApiVersion))
 
 	// Authentication endpoints
-	rVersion.POST("/sessions", server.loginUser)
+	rVersion.POST("/sessions", server.createSessions)
+	rVersion.DELETE("/sessions", server.deleteSessions)
 
 	rVersion.POST("/users", server.createUser)
 	rVersion.GET("/health", server.healthCheck)
