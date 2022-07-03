@@ -7,6 +7,8 @@ package db
 import (
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ContractRole string
@@ -95,6 +97,17 @@ type PriceParam struct {
 	Name       string  `json:"name"`
 	Value      float64 `json:"value"`
 	Currency   string  `json:"currency"`
+}
+
+type Session struct {
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	RefreshToken string    `json:"refreshToken"`
+	UserAgent    string    `json:"userAgent"`
+	ClientIp     string    `json:"clientIp"`
+	IsBlocked    bool      `json:"isBlocked"`
+	ExpiresAt    time.Time `json:"expiresAt"`
+	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type TimeParam struct {
