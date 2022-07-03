@@ -6,12 +6,15 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error)
 	CreateParty(ctx context.Context, arg CreatePartyParams) (Party, error)
 	CreatePeriodParam(ctx context.Context, arg CreatePeriodParamParams) (PeriodParam, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateTimeParam(ctx context.Context, arg CreateTimeParamParams) (TimeParam, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteContract(ctx context.Context, id int64) error
@@ -23,6 +26,7 @@ type Querier interface {
 	GetContractOwner(ctx context.Context, contractID int64) (Party, error)
 	GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
 	GetPeriodParam(ctx context.Context, id int64) (PeriodParam, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetTimeParam(ctx context.Context, id int64) (TimeParam, error)
 	GetUser(ctx context.Context, username string) (User, error)
 	ListContractParties(ctx context.Context, arg ListContractPartiesParams) ([]Party, error)
