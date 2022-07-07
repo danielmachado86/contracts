@@ -20,25 +20,10 @@
 		"terminal.integrated.defaultProfile.linux": "zsh",
     	"terminal.integrated.profiles.linux": {
     
-        "bash": {
-            "path": "bash",
-            "icon": "terminal-bash"
-        },
         "zsh": {
             "path": "zsh",
             "icon": "terminal-debian"
 
-        },
-        "fish": {
-            "path": "fish"
-        },
-        "tmux": {
-            "path": "tmux",
-            "icon": "terminal-tmux"
-        },
-        "pwsh": {
-            "path": "pwsh",
-            "icon": "terminal-powershell"
         }
     },
 		"terminal.integrated.fontFamily": "Hack Nerd Font Mono",
@@ -52,14 +37,15 @@
 	"extensions": [
 		"golang.Go",
 		"zxh404.vscode-proto3",
-		"plex.vscode-protolint"
+		"plex.vscode-protolint",
+		"eamodio.gitlens"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "sudo ./.devcontainer/postCreateCommand.sh",
+	"postCreateCommand": "./.devcontainer/postCreateCommand.sh",
 
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode"
