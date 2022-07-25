@@ -110,6 +110,12 @@ type Session struct {
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
+type Signature struct {
+	Username   string    `json:"username"`
+	ContractID int64     `json:"contractID"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
 type TimeParam struct {
 	ID         int64     `json:"id"`
 	ContractID int64     `json:"contractID"`
