@@ -1,0 +1,141 @@
+{
+    "category": "rental",
+    "name": "real-state rental 2 parties periodic payment",
+    "description": "bounded contract with periodic payment",
+    "attributes":[
+        {
+            "name": "contract_parties",
+            "description": "contract_max_parties_2_parties",
+            "parameters": [
+                {
+                    "name": "min",
+                    "value": 2
+                },
+                {
+                    "name": "max",
+                    "value": 2
+                }
+            ],
+            "inputs": [],
+            "outputs": [
+                "contract_parties"
+            ]
+        },
+        {
+            "name": "contract_signatures",
+            "description": "contract_signatures_max_2",
+            "parameters":  [],
+            "inputs": [
+                "contract_parties"
+            ],
+            "outputs": [
+                "contract_signatures"
+            ]
+        },
+        {
+            "name": "contract_is_signed",
+            "description": "contract_2_parties_is_signed",
+            "parameters": [
+                {
+                    "name": "signatures",
+                    "value": 2
+                }
+            ],
+            "inputs": [
+                "contract_signatures"
+            ],
+            "outputs": [
+                "contract_is_signed"
+            ]
+        },
+        {
+            "name": "contract_signature_date",
+            "description": "contract_signature_date",
+            "parameters":  [],
+            "inputs": [
+                "contract_is_signed"
+            ],
+            "outputs": [
+                "contract_signature_date"
+            ]
+        },
+        {
+            "name": "contract_start_date",
+            "description": "contract_start_date_next_day",
+            "parameters": [
+                {
+                    "name": "when",
+                    "value": "next_day"
+                }
+            ],
+            "inputs": [
+                "contract_signature_date"
+            ],
+            "outputs": [
+                "contract_start_date"
+            ]
+        },
+        {
+            "name": "contract_end_date",
+            "description": "contract_end_12_months",
+            "parameters": [
+                {
+                    "name": "period",
+                    "value":  12
+                },
+                {
+                    "name": "units",
+                    "value":  "month"
+                }
+                
+            ],
+            "inputs": [
+                "contract_start_date"
+            ],
+            "outputs": [
+                "contract_end_date"
+            ]
+        },
+        {
+            "name": "contract_renew_deadline",
+            "description": "contract_renew_deadline_3_months_before_end",
+            "parameters": [
+                {
+                    "name": "period",
+                    "value":  3
+                },
+                {
+                    "name": "units",
+                    "value":  "month"
+                }
+            ],
+            "inputs": [
+                "contract_end_date"
+            ],
+            "outputs": [
+                "contract_renew_deadline"
+            ]
+        },
+        {
+            "name": "contract_installment_plan",
+            "description": "contract_installment_plan_monthly",
+            "parameters": [
+                {
+                    "name": "period",
+                    "value":  1
+                },
+                {
+                    "name": "units",
+                    "value":  "month"
+                }
+            ],
+            "inputs": [
+                "contract_start_date",
+                "contract_duration"
+            ],
+            "outputs": [
+                "contract_installment_plan"
+            ]
+        }
+    ]
+}
