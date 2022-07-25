@@ -1,5 +1,7 @@
 package data
 
+import "time"
+
 type User struct {
 	name string
 }
@@ -9,16 +11,24 @@ func NewUser(name string) *User {
 }
 
 type Party struct {
-	user     *User
-	contract *Contract
+	user *User
 }
 
-func NewParty(user *User, contract *Contract) *Party {
-	return &Party{user: user, contract: contract}
+func NewParty(user *User) *Party {
+	return &Party{user: user}
 }
 
-var user1 = NewUser("Daniel M")
-var user2 = NewUser("Jimena L")
+var Signatures = map[*Party]*Signature{}
 
-var Party1 = NewParty(user1, ContractInst)
-var Party2 = NewParty(user2, ContractInst)
+type Signature struct {
+	Party *Party
+	Date  time.Time
+}
+
+func NewSignature(party *Party) {
+	Signatures[party] = &Signature{Party: party, Date: time.Now()}
+}
+
+func GetSignature(party *Party) *Signature {
+	return Signatures[party]
+}
