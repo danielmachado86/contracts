@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
 )

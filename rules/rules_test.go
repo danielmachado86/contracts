@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 	"github.com/stretchr/testify/require"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 )
 
 // func roundDateToNextDay(t time.Time) time.Time {

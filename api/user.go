@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

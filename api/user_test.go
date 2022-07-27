@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/danielmachado86/contracts/db"
 	mockdb "github.com/danielmachado86/contracts/db/mock"
-	db "github.com/danielmachado86/contracts/db/sqlc"
 	"github.com/danielmachado86/contracts/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
