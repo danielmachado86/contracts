@@ -122,20 +122,76 @@ func (server *Server) listParties(ctx *gin.Context) {
 		return
 	}
 
-	// authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
-
-	arg := db.ListContractPartiesParams{
-		ContractID: UriReq.ContractID,
-		Limit:      req.PageSize,
-		Offset:     (req.PageID - 1) * req.PageSize,
-	}
-
-	parties, err := server.store.ListContractParties(ctx, arg)
+	parties, err := server.store.ListContractParties(ctx, UriReq.ContractID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, parties)
+
+}
+
+type createSignatureRequest struct {
+	ContractID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) createSignature(ctx *gin.Context) {
+	var req createSignatureRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	arg := db.GetPartyParams{
+		Username:   authPayload.Username,
+		ContractID: req.ContractID,
+	}
+	_, err := server.store.GetParty(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = errors.New("you are not a party of the requested contract")
+			ctx.JSON(http.StatusUnauthorized, errorResponse(err, http.StatusUnauthorized))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	arg1 := db.CreateSignatureParams{
+		Username:   authPayload.Username,
+		ContractID: req.ContractID,
+	}
+
+	party, err := server.store.CreateSignature(ctx, arg1)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, party)
+}
+
+type listSignaturesURIRequest struct {
+	ContractID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) listSignatures(ctx *gin.Context) {
+
+	var UriReq listSignaturesURIRequest
+	if err := ctx.ShouldBindUri(&UriReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
+		return
+	}
+
+	signatures, err := server.store.ListContractSignatures(ctx, UriReq.ContractID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, signatures)
 
 }

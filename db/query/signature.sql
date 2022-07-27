@@ -15,8 +15,8 @@ WHERE username = $1 AND contract_id = $2 LIMIT 1;
 SELECT * FROM signatures
 WHERE contract_id = $1
 ORDER BY username
-LIMIT $2
-OFFSET $3;
+LIMIT NULL
+OFFSET NULL;
 
 -- name: DeleteSignature :exec
 DELETE FROM signatures

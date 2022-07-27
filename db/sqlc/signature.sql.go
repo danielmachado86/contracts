@@ -67,18 +67,12 @@ const listContractSignatures = `-- name: ListContractSignatures :many
 SELECT username, contract_id, created_at FROM signatures
 WHERE contract_id = $1
 ORDER BY username
-LIMIT $2
-OFFSET $3
+LIMIT NULL
+OFFSET NULL
 `
 
-type ListContractSignaturesParams struct {
-	ContractID int64 `json:"contractID"`
-	Limit      int32 `json:"limit"`
-	Offset     int32 `json:"offset"`
-}
-
-func (q *Queries) ListContractSignatures(ctx context.Context, arg ListContractSignaturesParams) ([]Signature, error) {
-	rows, err := q.db.QueryContext(ctx, listContractSignatures, arg.ContractID, arg.Limit, arg.Offset)
+func (q *Queries) ListContractSignatures(ctx context.Context, contractID int64) ([]Signature, error) {
+	rows, err := q.db.QueryContext(ctx, listContractSignatures, contractID)
 	if err != nil {
 		return nil, err
 	}
