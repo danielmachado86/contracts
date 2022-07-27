@@ -20,8 +20,8 @@ WHERE contract_id = $1 AND role = 'owner' LIMIT 1;
 SELECT * FROM parties
 WHERE contract_id = $1
 ORDER BY username
-LIMIT $2
-OFFSET $3;
+LIMIT NULL
+OFFSET NULL;
 
 -- name: DeleteParty :exec
 DELETE FROM parties
