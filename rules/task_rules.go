@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/danielmachado86/contracts/data"
+	db "github.com/danielmachado86/contracts/db/sqlc"
 )
 
 // func roundDateToNextDay(t time.Time) time.Time {
@@ -37,9 +37,9 @@ func checkInputs(inputs []string, ruleRegistry map[string]Rule) error {
 	return nil
 }
 
-type MaxPartiesFactory struct{}
+type PartiesFactory struct{}
 
-func (factory *MaxPartiesFactory) Create(attributes *Attributes) Rule {
+func (factory *PartiesFactory) Create(attributes *Attributes) Rule {
 	params := getParams(attributes)
 	return &Parties{
 		Name:    attributes.Name,
@@ -54,13 +54,13 @@ type Parties struct {
 	Name    string
 	Max     int
 	Min     int
-	Parties []*data.Party
+	Parties []*db.Party
 	Inputs  []string
 	Outputs map[string]interface{}
 }
 
 func NewPartiesRule(attributes *Attributes) (Rule, error) {
-	factory := MaxPartiesFactory{}
+	factory := PartiesFactory{}
 	return factory.Create(attributes), nil
 }
 
@@ -94,9 +94,10 @@ func (factory *SignaturesFactory) Create(attributes *Attributes) Rule {
 }
 
 type Signatures struct {
-	Name    string
-	Inputs  []string
-	Outputs map[string]interface{}
+	Name       string
+	Signatures []*db.Signature
+	Inputs     []string
+	Outputs    map[string]interface{}
 }
 
 func NewSignaturesRule(attributes *Attributes) (Rule, error) {
@@ -111,16 +112,7 @@ func (rule *Signatures) Run(ruleRegistry map[string]Rule) error {
 		return err
 	}
 
-	parties := ruleRegistry["contract_parties"].GetOutput("contract_parties").([]*data.Party)
-
-	var signatures []data.Signature
-	for _, party := range parties {
-		signature := data.GetSignature(party)
-		if signature != nil {
-			signatures = append(signatures, *signature)
-		}
-	}
-	rule.Outputs[rule.Name] = signatures
+	rule.Outputs[rule.Name] = rule.Signatures
 	return nil
 }
 
@@ -163,7 +155,7 @@ func (rule *IsSigned) Run(ruleRegistry map[string]Rule) error {
 		return err
 	}
 
-	signatures := ruleRegistry["contract_signatures"].GetOutput("contract_signatures").([]data.Signature)
+	signatures := ruleRegistry["contract_signatures"].GetOutput("contract_signatures").([]*db.Signature)
 
 	if len(signatures) == rule.Signatures {
 		rule.Outputs[rule.Name] = true
@@ -211,7 +203,7 @@ func (rule *SignatureDate) Run(ruleRegistry map[string]Rule) error {
 	}
 
 	is_signed := ruleRegistry["contract_is_signed"].GetOutput("contract_is_signed").(bool)
-	signatures := ruleRegistry["contract_signatures"].GetOutput("contract_signatures").([]data.Signature)
+	signatures := ruleRegistry["contract_signatures"].GetOutput("contract_signatures").([]*db.Signature)
 
 	if !is_signed {
 		return fmt.Errorf("contract not signed")
@@ -219,7 +211,7 @@ func (rule *SignatureDate) Run(ruleRegistry map[string]Rule) error {
 
 	ld := time.Date(1970, 1, 1, 1, 0, 0, 0, time.UTC)
 	for _, s := range signatures {
-		d := s.Date
+		d := s.CreatedAt
 		if d.After(ld) {
 			ld = d
 		}
