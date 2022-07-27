@@ -25,9 +25,7 @@
             "name": "contract_signatures",
             "description": "contract_signatures_max_2",
             "parameters":  [],
-            "inputs": [
-                "contract_parties"
-            ],
+            "inputs": [],
             "outputs": [
                 "contract_signatures"
             ]
