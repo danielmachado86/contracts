@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/danielmachado86/contracts/api"
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/utils"
 	_ "github.com/lib/pq"
 )

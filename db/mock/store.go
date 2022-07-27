@@ -8,8 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 )
 
 // MockStore is a mock of Store interface.
@@ -78,6 +79,36 @@ func (m *MockStore) CreatePeriodParam(arg0 context.Context, arg1 db.CreatePeriod
 func (mr *MockStoreMockRecorder) CreatePeriodParam(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePeriodParam", reflect.TypeOf((*MockStore)(nil).CreatePeriodParam), arg0, arg1)
+}
+
+// CreateSession mocks base method.
+func (m *MockStore) CreateSession(arg0 context.Context, arg1 db.CreateSessionParams) (db.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSession", arg0, arg1)
+	ret0, _ := ret[0].(db.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSession indicates an expected call of CreateSession.
+func (mr *MockStoreMockRecorder) CreateSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockStore)(nil).CreateSession), arg0, arg1)
+}
+
+// CreateSignature mocks base method.
+func (m *MockStore) CreateSignature(arg0 context.Context, arg1 db.CreateSignatureParams) (db.Signature, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSignature", arg0, arg1)
+	ret0, _ := ret[0].(db.Signature)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSignature indicates an expected call of CreateSignature.
+func (mr *MockStoreMockRecorder) CreateSignature(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSignature", reflect.TypeOf((*MockStore)(nil).CreateSignature), arg0, arg1)
 }
 
 // CreateTimeParam mocks base method.
@@ -150,6 +181,20 @@ func (m *MockStore) DeletePeriodParam(arg0 context.Context, arg1 int64) error {
 func (mr *MockStoreMockRecorder) DeletePeriodParam(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePeriodParam", reflect.TypeOf((*MockStore)(nil).DeletePeriodParam), arg0, arg1)
+}
+
+// DeleteSignature mocks base method.
+func (m *MockStore) DeleteSignature(arg0 context.Context, arg1 db.DeleteSignatureParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSignature", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSignature indicates an expected call of DeleteSignature.
+func (mr *MockStoreMockRecorder) DeleteSignature(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSignature", reflect.TypeOf((*MockStore)(nil).DeleteSignature), arg0, arg1)
 }
 
 // DeleteTimeParam mocks base method.
@@ -240,6 +285,36 @@ func (mr *MockStoreMockRecorder) GetPeriodParam(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPeriodParam", reflect.TypeOf((*MockStore)(nil).GetPeriodParam), arg0, arg1)
 }
 
+// GetSession mocks base method.
+func (m *MockStore) GetSession(arg0 context.Context, arg1 uuid.UUID) (db.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSession", arg0, arg1)
+	ret0, _ := ret[0].(db.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSession indicates an expected call of GetSession.
+func (mr *MockStoreMockRecorder) GetSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSession", reflect.TypeOf((*MockStore)(nil).GetSession), arg0, arg1)
+}
+
+// GetSignature mocks base method.
+func (m *MockStore) GetSignature(arg0 context.Context, arg1 db.GetSignatureParams) (db.Signature, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSignature", arg0, arg1)
+	ret0, _ := ret[0].(db.Signature)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSignature indicates an expected call of GetSignature.
+func (mr *MockStoreMockRecorder) GetSignature(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSignature", reflect.TypeOf((*MockStore)(nil).GetSignature), arg0, arg1)
+}
+
 // GetTimeParam mocks base method.
 func (m *MockStore) GetTimeParam(arg0 context.Context, arg1 int64) (db.TimeParam, error) {
 	m.ctrl.T.Helper()
@@ -271,7 +346,7 @@ func (mr *MockStoreMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // ListContractParties mocks base method.
-func (m *MockStore) ListContractParties(arg0 context.Context, arg1 db.ListContractPartiesParams) ([]db.Party, error) {
+func (m *MockStore) ListContractParties(arg0 context.Context, arg1 int64) ([]db.Party, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListContractParties", arg0, arg1)
 	ret0, _ := ret[0].([]db.Party)
@@ -283,6 +358,21 @@ func (m *MockStore) ListContractParties(arg0 context.Context, arg1 db.ListContra
 func (mr *MockStoreMockRecorder) ListContractParties(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListContractParties", reflect.TypeOf((*MockStore)(nil).ListContractParties), arg0, arg1)
+}
+
+// ListContractSignatures mocks base method.
+func (m *MockStore) ListContractSignatures(arg0 context.Context, arg1 int64) ([]db.Signature, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListContractSignatures", arg0, arg1)
+	ret0, _ := ret[0].([]db.Signature)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListContractSignatures indicates an expected call of ListContractSignatures.
+func (mr *MockStoreMockRecorder) ListContractSignatures(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListContractSignatures", reflect.TypeOf((*MockStore)(nil).ListContractSignatures), arg0, arg1)
 }
 
 // ListContracts mocks base method.

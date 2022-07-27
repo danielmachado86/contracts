@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 
-	db "github.com/danielmachado86/contracts/db/sqlc"
+	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/token"
 	"github.com/danielmachado86/contracts/utils"
 	"github.com/gin-gonic/gin"
@@ -57,7 +57,8 @@ func (server *Server) setupRouter() {
 	rVersion := router.Group(fmt.Sprintf("/%s", server.config.ApiVersion))
 
 	// Authentication endpoints
-	rVersion.POST("/sessions", server.loginUser)
+	rVersion.POST("/sessions", server.createSessions)
+	rVersion.DELETE("/sessions", server.deleteSessions)
 
 	rVersion.POST("/users", server.createUser)
 	rVersion.GET("/health", server.healthCheck)
@@ -72,9 +73,8 @@ func (server *Server) setupRouter() {
 	authRoutes.GET("/contracts/:id/users/:username", server.getParty)
 	authRoutes.GET("/contracts/:id/users", server.listParties)
 
-	authRoutes.POST("/contracts/:id/periods", server.createPeriodParam)
-	authRoutes.GET("/periods/:id", server.getPeriodParam)
-	authRoutes.GET("/contracts/:id/periods", server.listPeriodParam)
+	authRoutes.POST("/contracts/:id/signatures", server.createSignature)
+	authRoutes.GET("/contracts/:id/signatures", server.listSignatures)
 
 	server.router = router
 

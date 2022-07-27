@@ -6,26 +6,34 @@ package db
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error)
 	CreateParty(ctx context.Context, arg CreatePartyParams) (Party, error)
 	CreatePeriodParam(ctx context.Context, arg CreatePeriodParamParams) (PeriodParam, error)
+	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
+	CreateSignature(ctx context.Context, arg CreateSignatureParams) (Signature, error)
 	CreateTimeParam(ctx context.Context, arg CreateTimeParamParams) (TimeParam, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteContract(ctx context.Context, id int64) error
 	DeleteParty(ctx context.Context, arg DeletePartyParams) error
 	DeletePeriodParam(ctx context.Context, id int64) error
+	DeleteSignature(ctx context.Context, arg DeleteSignatureParams) error
 	DeleteTimeParam(ctx context.Context, id int64) error
 	DeleteUser(ctx context.Context, username string) error
 	GetContract(ctx context.Context, id int64) (Contract, error)
 	GetContractOwner(ctx context.Context, contractID int64) (Party, error)
 	GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
 	GetPeriodParam(ctx context.Context, id int64) (PeriodParam, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
+	GetSignature(ctx context.Context, arg GetSignatureParams) (Signature, error)
 	GetTimeParam(ctx context.Context, id int64) (TimeParam, error)
 	GetUser(ctx context.Context, username string) (User, error)
-	ListContractParties(ctx context.Context, arg ListContractPartiesParams) ([]Party, error)
+	ListContractParties(ctx context.Context, contractID int64) ([]Party, error)
+	ListContractSignatures(ctx context.Context, contractID int64) ([]Signature, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]Contract, error)
 	ListPeriodParams(ctx context.Context, arg ListPeriodParamsParams) ([]PeriodParam, error)
 	ListTimeParams(ctx context.Context, arg ListTimeParamsParams) ([]TimeParam, error)
