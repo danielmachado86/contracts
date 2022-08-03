@@ -31,7 +31,3 @@ SELECT contracts.*
 UPDATE contracts SET template = $2
 WHERE id = $1
 RETURNING *;
-
--- name: DeleteContract :exec
-DELETE FROM contracts
-WHERE id = $1;

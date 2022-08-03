@@ -1,9 +1,9 @@
 package db
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 type Store interface {
@@ -15,27 +15,21 @@ type SQLStore struct {
 	*Queries
 }
 
-func NewStore(db *sql.DB) Store {
+func NewSQLStore(db *sql.DB) Store {
 	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
-func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
-	tx, err := store.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
+type DynamoDBStore struct {
+	db        *dynamodb.Client
+	TableName string
+}
 
-	q := New(tx)
-	err = fn(q)
-	if err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
-			return fmt.Errorf("tx err: %v, rb err: %v", err, rbErr)
-		}
-		return err
+func NewDynamoDBStore(db *dynamodb.Client) Store {
+	return &DynamoDBStore{
+		db:        db,
+		TableName: "Contracts",
 	}
-
-	return tx.Commit()
 }

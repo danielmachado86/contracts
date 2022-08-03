@@ -13,30 +13,30 @@ import (
 )
 
 type createUserRequest struct {
-	Name     string `json:"name" binding:"required"`
-	LastName string `json:"lastName" binding:"required"`
-	Username string `json:"username" binding:"required,alphanum"`
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
+	FirstName string `json:"firstName" binding:"required"`
+	LastName  string `json:"lastName" binding:"required"`
+	Username  string `json:"username" binding:"required,alphanum"`
+	Email     string `json:"email" binding:"required,email"`
+	Password  string `json:"password" binding:"required,min=6"`
 }
 
 type userResponse struct {
-	Name              string    `json:"name"`
-	LastName          string    `json:"lastName"`
-	Username          string    `json:"username"`
-	Email             string    `json:"email"`
-	PasswordChangedAt time.Time `json:"passwordChangedAt"`
-	CreatedAt         time.Time `json:"createdAt"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	ChangedAt time.Time `json:"changedAt"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 func newUserResponse(user db.User) userResponse {
 	return userResponse{
-		Name:              user.Name,
-		LastName:          user.LastName,
-		Username:          user.Username,
-		Email:             user.Email,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Username:  user.Username,
+		Email:     user.Email,
+		ChangedAt: user.ChangedAt,
+		CreatedAt: user.CreatedAt,
 	}
 }
 
@@ -52,7 +52,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := utils.HashPasword(req.Password)
+	passwordHashed, err := utils.HashPasword(req.Password)
 	if err != nil {
 		server.Logger.Errorf("failed to hash password")
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
@@ -60,11 +60,11 @@ func (server *Server) createUser(ctx *gin.Context) {
 	}
 
 	arg := db.CreateUserParams{
-		Name:           req.Name,
+		FirstName:      req.FirstName,
 		LastName:       req.LastName,
 		Username:       req.Username,
 		Email:          req.Email,
-		HashedPassword: hashedPassword,
+		PasswordHashed: passwordHashed,
 	}
 
 	user, err := server.store.CreateUser(ctx, arg)
@@ -121,7 +121,7 @@ func (server *Server) createSessions(ctx *gin.Context) {
 		return
 	}
 
-	err = utils.CheckPassword(req.Password, user.HashedPassword)
+	err = utils.CheckPassword(req.Password, user.PasswordHashed)
 	if err != nil {
 		server.Logger.Errorf("user %s not authorized", req.Username)
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err, http.StatusUnauthorized))

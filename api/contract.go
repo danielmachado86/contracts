@@ -11,7 +11,7 @@ import (
 )
 
 type createContractRequest struct {
-	Template db.Templates `json:"template" binding:"required,oneof=rental freelance services"`
+	Template string `json:"template" binding:"required,oneof=rental freelance services"`
 }
 
 type createContractResponse struct {

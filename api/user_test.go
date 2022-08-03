@@ -45,11 +45,11 @@ func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
 	if !ok {
 		return false
 	}
-	err := utils.CheckPassword(e.password, arg.HashedPassword)
+	err := utils.CheckPassword(e.password, arg.PasswordHashed)
 	if err != nil {
 		return false
 	}
-	e.arg.HashedPassword = arg.HashedPassword
+	e.arg.PasswordHashed = arg.PasswordHashed
 	return reflect.DeepEqual(e.arg, arg)
 }
 
@@ -107,7 +107,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "LastNameMissing",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"username": user.Username,
 				"email":    user.Email,
 				"password": password,
@@ -120,7 +120,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "LastNameIsBlank",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": "",
 				"username": user.Username,
 				"email":    user.Email,
@@ -134,7 +134,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "UsernameMissing",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": user.LastName,
 				"email":    user.Email,
 				"password": password,
@@ -147,7 +147,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "UsernameIsBlank",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": user.LastName,
 				"username": "",
 				"email":    user.Email,
@@ -161,7 +161,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "EmailMissing",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": user.LastName,
 				"Username": user.Username,
 				"password": password,
@@ -174,7 +174,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "EmailIsBlank",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": user.LastName,
 				"Username": user.Username,
 				"email":    "",
@@ -188,7 +188,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "PaswordHashMissing",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": user.LastName,
 				"Username": user.Username,
 				"email":    user.Email,
@@ -201,7 +201,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 		{
 			name: "ValidEmail",
 			body: gin.H{
-				"Name":     user.Name,
+				"Name":     user.FirstName,
 				"LastName": user.LastName,
 				"Username": user.Username,
 				"email":    "invalid email",
@@ -239,7 +239,7 @@ func TestCreateUserRequiredParams(t *testing.T) {
 
 func TestUserMockDB(t *testing.T) {
 	user, password := randomUser(t)
-	hashedPassword, err := utils.HashPasword(password)
+	passwordHashed, err := utils.HashPasword(password)
 	require.NoError(t, err)
 
 	tt := []struct {
@@ -251,7 +251,7 @@ func TestUserMockDB(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{
-				"name":     user.Name,
+				"name":     user.FirstName,
 				"lastName": user.LastName,
 				"username": user.Username,
 				"email":    user.Email,
@@ -259,11 +259,11 @@ func TestUserMockDB(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateUserParams{
-					Name:           user.Name,
+					FirstName:      user.FirstName,
 					LastName:       user.LastName,
 					Username:       user.Username,
 					Email:          user.Email,
-					HashedPassword: hashedPassword,
+					PasswordHashed: passwordHashed,
 				}
 				store.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParams(arg, password)).
@@ -278,7 +278,7 @@ func TestUserMockDB(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"name":     user.Name,
+				"name":     user.FirstName,
 				"lastName": user.LastName,
 				"username": user.Username,
 				"email":    user.Email,
@@ -391,15 +391,15 @@ func TestUserEnpoints(t *testing.T) {
 
 func randomUser(t *testing.T) (user db.User, password string) {
 	password = utils.RandomString(6)
-	hashedPassword, err := utils.HashPasword(password)
+	passwordHashed, err := utils.HashPasword(password)
 	require.NoError(t, err)
 
 	user = db.User{
-		Name:           utils.RandomString(6),
+		FirstName:      utils.RandomString(6),
 		LastName:       utils.RandomString(6),
 		Username:       utils.RandomString(6),
 		Email:          utils.RandomEmail(),
-		HashedPassword: hashedPassword,
+		PasswordHashed: passwordHashed,
 	}
 	return
 }
@@ -413,8 +413,8 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 
 	require.NoError(t, err)
 	require.Equal(t, user.Username, gotUser.Username)
-	require.Equal(t, user.Name, gotUser.Name)
+	require.Equal(t, user.FirstName, gotUser.FirstName)
 	require.Equal(t, user.LastName, gotUser.LastName)
 	require.Equal(t, user.Email, gotUser.Email)
-	require.Empty(t, gotUser.HashedPassword)
+	require.Empty(t, gotUser.PasswordHashed)
 }
