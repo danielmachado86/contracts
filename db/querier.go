@@ -7,28 +7,26 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 )
 
 type Querier interface {
 	CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error)
-	CreateParty(ctx context.Context, arg CreatePartyParams) (Party, error)
+	// CreateParty(ctx context.Context, arg CreatePartyParams) (Party, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
-	CreateSignature(ctx context.Context, arg CreateSignatureParams) (Signature, error)
+	// CreateSignature(ctx context.Context, arg CreateSignatureParams) (Signature, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
-	DeleteParty(ctx context.Context, arg DeletePartyParams) error
-	DeleteSignature(ctx context.Context, arg DeleteSignatureParams) error
+	// DeleteParty(ctx context.Context, arg DeletePartyParams) error
+	// DeleteSignature(ctx context.Context, arg DeleteSignatureParams) error
 	DeleteUser(ctx context.Context, username string) error
-	GetContract(ctx context.Context, id int64) (Contract, error)
-	GetContractOwner(ctx context.Context, contractID int64) (Party, error)
-	GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
-	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
-	GetSignature(ctx context.Context, arg GetSignatureParams) (Signature, error)
+	GetContract(ctx context.Context, arg GetContractParams) (Contract, error)
+	// GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
+	// GetSession(ctx context.Context, id uuid.UUID) (Session, error)
+	// GetSignature(ctx context.Context, arg GetSignatureParams) (Signature, error)
 	GetUser(ctx context.Context, username string) (User, error)
-	ListContractParties(ctx context.Context, contractID int64) ([]Party, error)
-	ListContractSignatures(ctx context.Context, contractID int64) ([]Signature, error)
-	ListContracts(ctx context.Context, arg ListContractsParams) ([]Contract, error)
-	UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)
+	// ListContractParties(ctx context.Context, contractID int64) ([]Party, error)
+	// ListContractSignatures(ctx context.Context, contractID int64) ([]Signature, error)
+	// ListContracts(ctx context.Context, arg ListContractsParams) ([]Contract, error)
+	// UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 }
 

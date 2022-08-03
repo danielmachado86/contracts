@@ -6,12 +6,11 @@ package db
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Contract struct {
 	ID        int64     `json:"id"`
+	Owner     string    `json:"owner"`
 	Template  string    `json:"template"`
 	CreatedAt time.Time `json:"createdAt"`
 }
@@ -24,14 +23,14 @@ type Party struct {
 }
 
 type Session struct {
-	ID           uuid.UUID `json:"id"`
-	Username     string    `json:"username"`
-	RefreshToken string    `json:"refreshToken"`
-	UserAgent    string    `json:"userAgent"`
-	ClientIp     string    `json:"clientIp"`
-	IsBlocked    bool      `json:"isBlocked"`
-	ExpiresAt    time.Time `json:"expiresAt"`
-	CreatedAt    time.Time `json:"createdAt"`
+	ID           string `json:"id"  dynamodbav:"id"`
+	Username     string    `json:"username" dynamodbav:"username"`
+	RefreshToken string    `json:"refreshToken" dynamodbav:"refreshToken"`
+	UserAgent    string    `json:"userAgent" dynamodbav:"userAgent"`
+	ClientIp     string    `json:"clientIp" dynamodbav:"clientIp"`
+	IsBlocked    bool      `json:"isBlocked" dynamodbav:"isBlocked"`
+	ExpiresAt    time.Time `json:"expiresAt" dynamodbav:"expiresAt"`
+	CreatedAt    time.Time `json:"createdAt" dynamodbav:"createdAt"`
 }
 
 type Signature struct {
@@ -41,11 +40,11 @@ type Signature struct {
 }
 
 type User struct {
-	FirstName      string    `json:"firstName"`
-	LastName       string    `json:"lastName"`
-	Username       string    `json:"username"`
-	Email          string    `json:"email"`
-	PasswordHashed string    `json:"passwordHashed"`
-	ChangedAt      time.Time `json:"changedAt"`
-	CreatedAt      time.Time `json:"createdAt"`
+	FirstName      string    `json:"firstName" dynamodbav:"firstName"`
+	LastName       string    `json:"lastName" dynamodbav:"lastName"`
+	Username       string    `json:"username" dynamodbav:"username"`
+	Email          string    `json:"email" dynamodbav:"email"`
+	PasswordHashed string    `json:"passwordHashed" dynamodbav:"passwordHashed"`
+	ChangedAt      time.Time `json:"changedAt" dynamodbav:"changedAt"`
+	CreatedAt      time.Time `json:"createdAt" dynamodbav:"createdAt"`
 }

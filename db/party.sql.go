@@ -53,23 +53,6 @@ func (q *Queries) DeleteParty(ctx context.Context, arg DeletePartyParams) error 
 	return err
 }
 
-const getContractOwner = `-- name: GetContractOwner :one
-SELECT username, role, contract_id, created_at FROM parties
-WHERE contract_id = $1 AND role = 'owner' LIMIT 1
-`
-
-func (q *Queries) GetContractOwner(ctx context.Context, contractID int64) (Party, error) {
-	row := q.db.QueryRowContext(ctx, getContractOwner, contractID)
-	var i Party
-	err := row.Scan(
-		&i.Username,
-		&i.Role,
-		&i.ContractID,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const getParty = `-- name: GetParty :one
 SELECT username, role, contract_id, created_at FROM parties
 WHERE username = $1 AND contract_id = $2 LIMIT 1

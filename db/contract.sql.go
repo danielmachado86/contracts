@@ -7,52 +7,70 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createContract = `-- name: CreateContract :one
 WITH contracts AS (
   INSERT INTO contracts
-    (template)
+    ("owner", template)
   VALUES
-    ($1)
-  RETURNING id, template, created_at),
+    ($1, $2)
+  RETURNING id, owner, template, created_at),
 parties AS (
   INSERT INTO parties
     (username, contract_id, role)
-  SELECT $2, id, 'owner' FROM contracts
+  SELECT $1, id, 'owner' FROM contracts
   RETURNING username, role, contract_id, created_at
 )
-SELECT id, template, created_at
+SELECT id, owner, template, created_at
 FROM contracts
 LIMIT 1
 `
 
 type CreateContractParams struct {
+	Owner    string `json:"owner"`
 	Template string `json:"template"`
-	Username string `json:"username"`
 }
 
 func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
-	row := q.db.QueryRowContext(ctx, createContract, arg.Template, arg.Username)
+	row := q.db.QueryRowContext(ctx, createContract, arg.Owner, arg.Template)
 	var i Contract
-	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Template,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const getContract = `-- name: GetContract :one
-SELECT id, template, created_at FROM contracts
-WHERE id = $1 LIMIT 1
+SELECT id, owner, template, created_at FROM contracts
+WHERE owner=$1 AND template=$2 AND created_at=$3
+LIMIT 1
 `
 
-func (q *Queries) GetContract(ctx context.Context, id int64) (Contract, error) {
-	row := q.db.QueryRowContext(ctx, getContract, id)
+type GetContractParams struct {
+	Owner     string    `json:"owner"`
+	Template  string    `json:"template"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+func (q *Queries) GetContract(ctx context.Context, arg GetContractParams) (Contract, error) {
+	row := q.db.QueryRowContext(ctx, getContract, arg.Owner, arg.Template, arg.CreatedAt)
 	var i Contract
-	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Template,
+		&i.CreatedAt,
+	)
 	return i, err
 }
 
 const listContracts = `-- name: ListContracts :many
-SELECT contracts.id, contracts.template, contracts.created_at 
+SELECT contracts.id, contracts.owner, contracts.template, contracts.created_at 
   FROM parties JOIN contracts ON parties.contract_id = contracts.id
   WHERE parties.username = $1
   ORDER BY contracts.created_at
@@ -75,7 +93,12 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 	items := []Contract{}
 	for rows.Next() {
 		var i Contract
-		if err := rows.Scan(&i.ID, &i.Template, &i.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Owner,
+			&i.Template,
+			&i.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -92,7 +115,7 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 const updateContract = `-- name: UpdateContract :one
 UPDATE contracts SET template = $2
 WHERE id = $1
-RETURNING id, template, created_at
+RETURNING id, owner, template, created_at
 `
 
 type UpdateContractParams struct {
@@ -103,6 +126,11 @@ type UpdateContractParams struct {
 func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error) {
 	row := q.db.QueryRowContext(ctx, updateContract, arg.ID, arg.Template)
 	var i Contract
-	err := row.Scan(&i.ID, &i.Template, &i.CreatedAt)
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Template,
+		&i.CreatedAt,
+	)
 	return i, err
 }

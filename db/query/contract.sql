@@ -1,14 +1,14 @@
 -- name: CreateContract :one
 WITH contracts AS (
   INSERT INTO contracts
-    (template)
+    ("owner", template)
   VALUES
-    ($1)
+    ($1, $2)
   RETURNING *),
 parties AS (
   INSERT INTO parties
     (username, contract_id, role)
-  SELECT $2, id, 'owner' FROM contracts
+  SELECT $1, id, 'owner' FROM contracts
   RETURNING *
 )
 SELECT *
@@ -17,7 +17,8 @@ LIMIT 1;
 
 -- name: GetContract :one
 SELECT * FROM contracts
-WHERE id = $1 LIMIT 1;
+WHERE owner=$1 AND template=$2 AND created_at=$3
+LIMIT 1;
 
 -- name: ListContracts :many
 SELECT contracts.* 

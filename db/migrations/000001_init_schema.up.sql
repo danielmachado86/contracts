@@ -1,6 +1,7 @@
 
 CREATE TABLE "contracts" (
   "id" bigserial PRIMARY KEY,
+  "owner" varchar NOT NULL,
   "template" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );

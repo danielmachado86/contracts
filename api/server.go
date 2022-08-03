@@ -67,14 +67,14 @@ func (server *Server) setupRouter() {
 
 	authRoutes.POST("/contracts", server.createContract)
 	authRoutes.GET("/contracts/:id", server.getContract)
-	authRoutes.GET("/contracts", server.listContract)
+	// authRoutes.GET("/contracts", server.listContract)
 
-	authRoutes.POST("/contracts/:id/users", server.createParty)
-	authRoutes.GET("/contracts/:id/users/:username", server.getParty)
-	authRoutes.GET("/contracts/:id/users", server.listParties)
+	// authRoutes.POST("/contracts/:id/users", server.createParty)
+	// authRoutes.GET("/contracts/:id/users/:username", server.getParty)
+	// authRoutes.GET("/contracts/:id/users", server.listParties)
 
-	authRoutes.POST("/contracts/:id/signatures", server.createSignature)
-	authRoutes.GET("/contracts/:id/signatures", server.listSignatures)
+	// authRoutes.POST("/contracts/:id/signatures", server.createSignature)
+	// authRoutes.GET("/contracts/:id/signatures", server.listSignatures)
 
 	server.router = router
 

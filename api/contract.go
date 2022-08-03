@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/token"
@@ -32,7 +33,7 @@ func (server *Server) createContract(ctx *gin.Context) {
 
 	arg := db.CreateContractParams{
 		Template: req.Template,
-		Username: authPayload.Username,
+		Owner:    authPayload.Username,
 	}
 
 	contract, err := server.store.CreateContract(ctx, arg)
@@ -53,18 +54,27 @@ func (server *Server) createContract(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, rsp)
 }
 
-type getContractRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+type getContractURIRequest struct {
+	Template  string    `uri:"template"`
+	CreatedAt time.Time `uri:"createdAt"`
 }
 
 func (server *Server) getContract(ctx *gin.Context) {
-	var req getContractRequest
+	var req getContractURIRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
 		return
 	}
 
-	contract, err := server.store.GetContract(ctx, req.ID)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	arg := db.GetContractParams{
+		Owner:     authPayload.Username,
+		Template:  req.Template,
+		CreatedAt: req.CreatedAt,
+	}
+
+	contract, err := server.store.GetContract(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
@@ -78,32 +88,32 @@ func (server *Server) getContract(ctx *gin.Context) {
 
 }
 
-type listContractRequest struct {
-	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
-}
+// type listContractRequest struct {
+// 	PageID   int32 `form:"page_id" binding:"required,min=1"`
+// 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
+// }
 
-func (server *Server) listContract(ctx *gin.Context) {
-	var req listContractRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
-		return
-	}
+// func (server *Server) listContract(ctx *gin.Context) {
+// 	var req listContractRequest
+// 	if err := ctx.ShouldBindQuery(&req); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
+// 		return
+// 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+// 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	arg := db.ListContractsParams{
-		Username: authPayload.Username,
-		Limit:    req.PageSize,
-		Offset:   (req.PageID - 1) * req.PageSize,
-	}
+// 	arg := db.ListContractsParams{
+// 		Username: authPayload.Username,
+// 		Limit:    req.PageSize,
+// 		Offset:   (req.PageID - 1) * req.PageSize,
+// 	}
 
-	contracts, err := server.store.ListContracts(ctx, arg)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
-		return
-	}
+// 	contracts, err := server.store.ListContracts(ctx, arg)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+// 		return
+// 	}
 
-	ctx.JSON(http.StatusOK, contracts)
+// 	ctx.JSON(http.StatusOK, contracts)
 
-}
+// }

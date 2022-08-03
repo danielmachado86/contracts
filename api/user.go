@@ -2,13 +2,14 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
+	"github.com/aws/smithy-go"
 	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -77,9 +78,17 @@ func (server *Server) createUser(ctx *gin.Context) {
 				return
 			}
 		}
-		server.Logger.Errorf("failed to create user")
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
-		return
+		var oe *smithy.OperationError
+		if errors.As(err, &oe) {
+			msg := "failed to create user: user already exist"
+			server.Logger.Errorf(msg)
+			ctx.JSON(http.StatusBadRequest, errorResponse(
+				errors.New(msg),
+				http.StatusBadRequest,
+			))
+			return
+		}
+
 	}
 
 	server.Logger.Infof("user %s succesfully created", req.Username)
@@ -88,13 +97,13 @@ func (server *Server) createUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, rsp)
 }
 
-type loginUserRequest struct {
+type CreateSessionRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-type loginUserResponse struct {
-	SessionId             uuid.UUID    `json:"session_id"`
+type CreateSessionResponse struct {
+	SessionId             string       `json:"session_id"`
 	AccessToken           string       `json:"access_token"`
 	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
 	RefreshToken          string       `json:"refresh_token"`
@@ -103,7 +112,7 @@ type loginUserResponse struct {
 }
 
 func (server *Server) createSessions(ctx *gin.Context) {
-	var req loginUserRequest
+	var req CreateSessionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		server.Logger.Errorf("failed to unmarshal loginUser request body")
 		ctx.JSON(http.StatusBadRequest, errorResponse(err, http.StatusBadRequest))
@@ -112,6 +121,11 @@ func (server *Server) createSessions(ctx *gin.Context) {
 	user, err := server.store.GetUser(ctx, req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			server.Logger.Errorf("user %s not found", req.Username)
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
+			return
+		}
+		if err == db.ErrNotFound {
 			server.Logger.Errorf("user %s not found", req.Username)
 			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
 			return
@@ -161,7 +175,7 @@ func (server *Server) createSessions(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
 	}
 
-	rsp := loginUserResponse{
+	rsp := CreateSessionResponse{
 		SessionId:             session.ID,
 		AccessToken:           accessToken,
 		AccessTokenExpiresAt:  accessTokenPayload.ExpiredAt,
