@@ -162,7 +162,7 @@ type GetContractParams struct {
 	CreatedAt time.Time
 }
 
-func (p GetContractParams) GetKey() map[string]types.AttributeValue {
+func (p GetContractParams) GetKey(rangeKey string) map[string]types.AttributeValue {
 	pk, err := attributevalue.Marshal(fmt.Sprintf(
 		"%s#%s#%s",
 		p.Username,
@@ -172,7 +172,7 @@ func (p GetContractParams) GetKey() map[string]types.AttributeValue {
 	if err != nil {
 		panic(err)
 	}
-	sk, err := attributevalue.Marshal("contract")
+	sk, err := attributevalue.Marshal(rangeKey)
 	if err != nil {
 		panic(err)
 	}
@@ -184,7 +184,7 @@ func (s *DynamoDBStore) GetContract(ctx context.Context, arg GetContractParams) 
 		Template: arg.Template,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: arg.GetKey(), TableName: aws.String(s.TableName),
+		Key: arg.GetKey("contract"), TableName: aws.String(s.TableName),
 	})
 	if err != nil {
 		return contract, err
@@ -202,7 +202,7 @@ func (s *DynamoDBStore) GetContractOwner(ctx context.Context, arg GetContractPar
 		ContractID: 0,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: arg.GetKey(), TableName: aws.String(s.TableName),
+		Key: arg.GetKey("role#owner"), TableName: aws.String(s.TableName),
 	})
 	if err != nil {
 		return party, err
