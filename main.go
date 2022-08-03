@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-
 	"github.com/danielmachado86/contracts/api"
 	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/utils"
@@ -21,12 +19,9 @@ func main() {
 	if err != nil {
 		server.Logger.Fatalf("cannot load config:", err)
 	}
+	dynamoClient, err := db.CreateLocalClient()
+	store := db.NewDynamoDBStore(dynamoClient)
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
-	if err != nil {
-		server.Logger.Fatalf("cannot connect to db:", err)
-	}
-	store := db.NewStore(conn)
 	server.Logger.Infof("configuring server...")
 	err = server.ConfigServer(config, store)
 	if err != nil {
