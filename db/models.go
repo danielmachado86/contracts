@@ -9,10 +9,9 @@ import (
 )
 
 type Contract struct {
-	ID        int64     `json:"id"`
-	Owner     string    `json:"owner"`
-	Template  string    `json:"template"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID        string     `json:"id" dynamodbav:"id"`
+	Template  string    `json:"template" dynamodbav:"template"`
+	CreatedAt time.Time `json:"createdAt" dynamodbav:"createdAt"`
 }
 
 type Party struct {

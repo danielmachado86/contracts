@@ -3,9 +3,14 @@ package api
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/smithy-go"
 	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/utils"
@@ -80,13 +85,35 @@ func (server *Server) createUser(ctx *gin.Context) {
 		}
 		var oe *smithy.OperationError
 		if errors.As(err, &oe) {
-			msg := "failed to create user: user already exist"
-			server.Logger.Errorf(msg)
-			ctx.JSON(http.StatusBadRequest, errorResponse(
-				errors.New(msg),
-				http.StatusBadRequest,
-			))
-			return
+			var re *awshttp.ResponseError
+			if errors.As(oe.Err, &re) {
+				var tc *types.TransactionCanceledException
+				if errors.As(re.Err, &tc) {
+					server.Logger.Errorf("error due to transaction cancelation")
+					var rList []string
+					for _, r := range tc.CancellationReasons {
+						av := &db.AV{}
+						if r.Message != nil {
+							err := attributevalue.UnmarshalMap(r.Item, av)
+							rList = append(rList, av.Pk)
+							if err != nil {
+								ctx.JSON(http.StatusBadRequest, errorResponse(
+									errors.New("couldn't unmarshall dynamodb attributes"),
+									http.StatusBadRequest,
+								))
+							}
+						}
+					}
+					msg := fmt.Sprintf("failed to create user: %s fields already exists", strings.Join(rList, `, `))
+					server.Logger.Error(msg)
+					ctx.JSON(http.StatusBadRequest, errorResponse(
+						errors.New(msg),
+						http.StatusBadRequest,
+					))
+					return
+				}
+			}
+
 		}
 
 	}

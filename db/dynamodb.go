@@ -13,17 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/uuid"
 )
 
 var ErrNotFound = errors.New("resource not found")
 
-type DynamoCreateUserParams struct {
+type AV struct {
 	Pk string `json:"pk" dynamodbav:"pk"`
 	Sk string `json:"sk" dynamodbav:"sk"`
+}
+
+type DynamoCreateUserParams struct {
+	AV
 	User
 }
 
 func (s *DynamoDBStore) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+	av := AV{
+		Pk: fmt.Sprintf("USER#%s", arg.Username),
+		Sk: "PROFILE",
+	}
 	user := User{
 		FirstName:      arg.FirstName,
 		LastName:       arg.LastName,
@@ -34,21 +43,43 @@ func (s *DynamoDBStore) CreateUser(ctx context.Context, arg CreateUserParams) (U
 		CreatedAt:      time.Now(),
 	}
 	dynamoArg := DynamoCreateUserParams{
-		Pk:   fmt.Sprintf("user#%s", arg.Username),
-		Sk:   "profile",
+		AV:   av,
 		User: user,
 	}
 
+	eAv := AV{
+		Pk: arg.Email,
+		Sk: "field#email",
+	}
+
+	emailAv, err := attributevalue.MarshalMap(eAv)
+	if err != nil {
+		return User{}, err
+	}
 	item, err := attributevalue.MarshalMap(dynamoArg)
 	if err != nil {
 		return User{}, err
 	}
 
-	conditions := aws.String("attribute_not_exists(username)")
-	_, err = s.db.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName:           aws.String(s.TableName),
-		Item:                item,
-		ConditionExpression: conditions,
+	_, err = s.db.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		TransactItems: []types.TransactWriteItem{
+			{
+				Put: &types.Put{
+					TableName:                           &s.TableName,
+					Item:                                item,
+					ConditionExpression:                 aws.String("attribute_not_exists(pk)"),
+					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
+				},
+			},
+			{
+				Put: &types.Put{
+					TableName:                           &s.TableName,
+					Item:                                emailAv,
+					ConditionExpression:                 aws.String("attribute_not_exists(pk)"),
+					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
+				},
+			},
+		},
 	})
 
 	if err != nil {
@@ -136,49 +167,82 @@ func (user User) GetKey() map[string]types.AttributeValue {
 	}
 }
 
-type DynamoCreateContractParams struct {
-	Pk string `json:"pk"`
-	Sk string `json:"sk"`
+type ContractView struct {
+	AV
 	Contract
 }
 
-func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
-	t := time.Now()
-	contract := Contract{
-		Template:  arg.Template,
-		CreatedAt: t,
-	}
-	dynamoArg := DynamoCreateContractParams{
-		Pk: fmt.Sprintf(
-			"contract#%s#%s#%s",
-			arg.Owner,
-			contract.Template,
-			t.Format(time.RFC3339),
-		),
-		Sk:       "info",
-		Contract: contract,
-	}
+type PartyView struct {
+	AV
+	Username  string `dynamodbav:"username"`
+	FirstName string `dynamodbav:"firstName"`
+	LastName  string `dynamodbav:"lastName"`
+	Role      string `dynamodbav:"role"`
+}
 
-	item, err := attributevalue.MarshalMap(dynamoArg)
+func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
+	id, err := uuid.NewRandom()
 	if err != nil {
 		return Contract{}, err
 	}
-	_, err = s.db.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName: aws.String(s.TableName), Item: item,
+	party := PartyView{
+		AV: AV{
+			Pk: fmt.Sprintf("contract#%s", id),
+			Sk: "role#owner",
+		},
+		Username:  arg.Owner.Username,
+		FirstName: arg.Owner.FirstName,
+		LastName:  arg.Owner.LastName,
+		Role:      "owner",
+	}
+	contract := ContractView{
+		AV: AV{
+			Pk: fmt.Sprintf("contract#%s", id),
+			Sk: "info",
+		},
+		Contract: Contract{
+			ID:        id.String(),
+			Template:  arg.Template,
+			CreatedAt: time.Now(),
+		},
+	}
+
+	mContract, err := attributevalue.MarshalMap(contract)
+	if err != nil {
+		return Contract{}, err
+	}
+	mParty, err := attributevalue.MarshalMap(party)
+	if err != nil {
+		return Contract{}, err
+	}
+	_, err = s.db.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		TransactItems: []types.TransactWriteItem{
+			{
+				Put: &types.Put{
+					TableName:                           &s.TableName,
+					Item:                                mContract,
+					ConditionExpression:                 aws.String("attribute_not_exists(pk)"),
+					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
+				},
+			},
+			{
+				Put: &types.Put{
+					TableName:                           &s.TableName,
+					Item:                                mParty,
+					ConditionExpression:                 aws.String("attribute_not_exists(sk)"),
+					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
+				},
+			},
+		},
 	})
 	if err != nil {
 		return Contract{}, err
 	}
-	return contract, nil
+	return contract.Contract, nil
 }
 
-func (p GetContractParams) GetKey(rangeKey string) map[string]types.AttributeValue {
-	pk, err := attributevalue.Marshal(fmt.Sprintf(
-		"%s#%s#%s",
-		p.Owner,
-		p.Template,
-		p.CreatedAt.Format(time.RFC3339),
-	))
+func (c Contract) GetKey(rangeKey string) map[string]types.AttributeValue {
+	pk, err := attributevalue.Marshal(fmt.Sprintf("contract#%s", c.ID))
 	if err != nil {
 		panic(err)
 	}
@@ -189,12 +253,12 @@ func (p GetContractParams) GetKey(rangeKey string) map[string]types.AttributeVal
 	return map[string]types.AttributeValue{"pk": pk, "sk": sk}
 }
 
-func (s *DynamoDBStore) GetContract(ctx context.Context, arg GetContractParams) (Contract, error) {
+func (s *DynamoDBStore) GetContract(ctx context.Context, id string) (Contract, error) {
 	contract := Contract{
-		Template: arg.Template,
+		ID: id,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: arg.GetKey("contract"), TableName: aws.String(s.TableName),
+		Key: contract.GetKey("info"), TableName: aws.String(s.TableName),
 	})
 	if err != nil {
 		return contract, err
@@ -207,12 +271,15 @@ func (s *DynamoDBStore) GetContract(ctx context.Context, arg GetContractParams) 
 	return contract, err
 }
 
-func (s *DynamoDBStore) GetContractOwner(ctx context.Context, arg GetContractParams) (Party, error) {
+func (s *DynamoDBStore) GetContractOwner(ctx context.Context, id string) (Party, error) {
+	contract := Contract{
+		ID: id,
+	}
 	party := Party{
 		ContractID: 0,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: arg.GetKey("role#owner"), TableName: aws.String(s.TableName),
+		Key: contract.GetKey("role#owner"), TableName: aws.String(s.TableName),
 	})
 	if err != nil {
 		return party, err

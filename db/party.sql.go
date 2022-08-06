@@ -22,7 +22,7 @@ RETURNING username, role, contract_id, created_at
 
 type CreatePartyParams struct {
 	Username   string `json:"username"`
-	ContractID int64  `json:"contractID"`
+	ContractID string  `json:"contractID"`
 	Role       string `json:"role"`
 }
 

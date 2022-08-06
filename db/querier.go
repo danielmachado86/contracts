@@ -6,7 +6,6 @@ package db
 
 import (
 	"context"
-
 )
 
 type Querier interface {
@@ -18,7 +17,7 @@ type Querier interface {
 	// DeleteParty(ctx context.Context, arg DeletePartyParams) error
 	// DeleteSignature(ctx context.Context, arg DeleteSignatureParams) error
 	DeleteUser(ctx context.Context, username string) error
-	GetContract(ctx context.Context, arg GetContractParams) (Contract, error)
+	GetContract(ctx context.Context, id string) (Contract, error)
 	// GetParty(ctx context.Context, arg GetPartyParams) (Party, error)
 	// GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	// GetSignature(ctx context.Context, arg GetSignatureParams) (Signature, error)

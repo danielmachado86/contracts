@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/danielmachado86/contracts/utils"
 	"github.com/stretchr/testify/require"
@@ -11,9 +10,12 @@ import (
 
 func createRandomContract(t *testing.T) Contract {
 	user := createRandomUser(t)
+	party := PartyView{
+		Username: user.Username,
+	}
 	arg := CreateContractParams{
 		Template: "rental",
-		Owner:    user.Username,
+		Owner:    party,
 	}
 	contract, err := testQueries.CreateContract(context.Background(), arg)
 	require.NoError(t, err)
@@ -32,12 +34,8 @@ func TestCreateContract(t *testing.T) {
 
 func TestGetContract(t *testing.T) {
 	contract1 := createRandomContract(t)
-	arg := GetContractParams{
-		Owner:     "dmachadoc",
-		Template:  "rental",
-		CreatedAt: time.Now(),
-	}
-	contract2, err := testQueries.GetContract(context.Background(), arg)
+
+	contract2, err := testQueries.GetContract(context.Background(), contract1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, contract2)
@@ -66,6 +64,9 @@ func TestUpdateContract(t *testing.T) {
 
 func TestListContract(t *testing.T) {
 	username := utils.RandomUser()
+	party := PartyView{
+		Username: username,
+	}
 
 	arg0 := CreateUserParams{
 		FirstName:      utils.RandomString(6),
@@ -90,7 +91,7 @@ func TestListContract(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		arg := CreateContractParams{
 			Template: utils.RandomTemplate(),
-			Owner:    username,
+			Owner:    party,
 		}
 
 		contract, err := testQueries.CreateContract(context.Background(), arg)

@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"time"
 )
 
 const createContract = `-- name: CreateContract :one
@@ -29,7 +28,7 @@ LIMIT 1
 `
 
 type CreateContractParams struct {
-	Owner    string `json:"owner"`
+	Owner    PartyView `json:"owner"`
 	Template string `json:"template"`
 }
 
@@ -38,7 +37,6 @@ func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) 
 	var i Contract
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
 		&i.Template,
 		&i.CreatedAt,
 	)
@@ -51,18 +49,11 @@ WHERE owner=$1 AND template=$2 AND created_at=$3
 LIMIT 1
 `
 
-type GetContractParams struct {
-	Owner     string    `json:"owner"`
-	Template  string    `json:"template"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
-func (q *Queries) GetContract(ctx context.Context, arg GetContractParams) (Contract, error) {
-	row := q.db.QueryRowContext(ctx, getContract, arg.Owner, arg.Template, arg.CreatedAt)
+func (q *Queries) GetContract(ctx context.Context, id string) (Contract, error) {
+	row := q.db.QueryRowContext(ctx, getContract, id)
 	var i Contract
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
 		&i.Template,
 		&i.CreatedAt,
 	)
@@ -95,7 +86,6 @@ func (q *Queries) ListContracts(ctx context.Context, arg ListContractsParams) ([
 		var i Contract
 		if err := rows.Scan(
 			&i.ID,
-			&i.Owner,
 			&i.Template,
 			&i.CreatedAt,
 		); err != nil {
@@ -119,7 +109,7 @@ RETURNING id, owner, template, created_at
 `
 
 type UpdateContractParams struct {
-	ID       int64  `json:"id"`
+	ID       string  `json:"id"`
 	Template string `json:"template"`
 }
 
@@ -128,7 +118,6 @@ func (q *Queries) UpdateContract(ctx context.Context, arg UpdateContractParams) 
 	var i Contract
 	err := row.Scan(
 		&i.ID,
-		&i.Owner,
 		&i.Template,
 		&i.CreatedAt,
 	)

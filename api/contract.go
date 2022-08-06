@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"time"
 
 	db "github.com/danielmachado86/contracts/db"
 	"github.com/danielmachado86/contracts/token"
@@ -31,9 +30,25 @@ func (server *Server) createContract(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
+	user, err := server.store.GetUser(ctx, authPayload.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	party := db.PartyView{
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
+
 	arg := db.CreateContractParams{
 		Template: req.Template,
-		Owner:    authPayload.Username,
+		Owner:    party,
 	}
 
 	contract, err := server.store.CreateContract(ctx, arg)
@@ -43,7 +58,7 @@ func (server *Server) createContract(ctx *gin.Context) {
 		return
 	}
 
-	ownerURL := fmt.Sprintf("http://localhost:8080/contracts/%d/users/%s", contract.ID, authPayload.Username)
+	ownerURL := fmt.Sprintf("http://localhost:8080/contracts/%s/users/%s", contract.ID, authPayload.Username)
 
 	rsp := createContractResponse{
 		Username: authPayload.Username,
@@ -55,8 +70,7 @@ func (server *Server) createContract(ctx *gin.Context) {
 }
 
 type getContractURIRequest struct {
-	Template  string    `uri:"template"`
-	CreatedAt time.Time `uri:"createdAt"`
+	ID string `uri:"id"`
 }
 
 func (server *Server) getContract(ctx *gin.Context) {
@@ -66,15 +80,7 @@ func (server *Server) getContract(ctx *gin.Context) {
 		return
 	}
 
-	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
-
-	arg := db.GetContractParams{
-		Owner:     authPayload.Username,
-		Template:  req.Template,
-		CreatedAt: req.CreatedAt,
-	}
-
-	contract, err := server.store.GetContract(ctx, arg)
+	contract, err := server.store.GetContract(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err, http.StatusNotFound))
