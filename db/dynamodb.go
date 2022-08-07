@@ -48,8 +48,8 @@ func (s *DynamoDBStore) CreateUser(ctx context.Context, arg CreateUserParams) (U
 	}
 
 	eAv := AV{
-		Pk: arg.Email,
-		Sk: "field#email",
+		Pk: fmt.Sprintf("EMAIL#%s", arg.Email),
+		Sk: "FIELD",
 	}
 
 	emailAv, err := attributevalue.MarshalMap(eAv)
@@ -153,11 +153,11 @@ func (s *DynamoDBStore) UpdateUser(ctx context.Context, arg UpdateUserParams) (U
 }
 
 func (user User) GetKey() map[string]types.AttributeValue {
-	pk, err := attributevalue.Marshal(fmt.Sprintf("user#%s", user.Username))
+	pk, err := attributevalue.Marshal(fmt.Sprintf("USER#%s", user.Username))
 	if err != nil {
 		panic(err)
 	}
-	sk, err := attributevalue.Marshal("profile")
+	sk, err := attributevalue.Marshal("PROFILE")
 	if err != nil {
 		panic(err)
 	}
@@ -187,8 +187,8 @@ func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractPa
 	}
 	party := PartyView{
 		AV: AV{
-			Pk: fmt.Sprintf("contract#%s", id),
-			Sk: "role#owner",
+			Pk: fmt.Sprintf("CONTRACT#%s", id),
+			Sk: "ROLE#owner",
 		},
 		Username:  arg.Owner.Username,
 		FirstName: arg.Owner.FirstName,
@@ -197,8 +197,8 @@ func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractPa
 	}
 	contract := ContractView{
 		AV: AV{
-			Pk: fmt.Sprintf("contract#%s", id),
-			Sk: "info",
+			Pk: fmt.Sprintf("CONTRACT#%s", id),
+			Sk: "INFO",
 		},
 		Contract: Contract{
 			ID:        id.String(),
@@ -242,7 +242,7 @@ func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractPa
 }
 
 func (c Contract) GetKey(rangeKey string) map[string]types.AttributeValue {
-	pk, err := attributevalue.Marshal(fmt.Sprintf("contract#%s", c.ID))
+	pk, err := attributevalue.Marshal(fmt.Sprintf("CONTRACT#%s", c.ID))
 	if err != nil {
 		panic(err)
 	}
@@ -258,7 +258,7 @@ func (s *DynamoDBStore) GetContract(ctx context.Context, id string) (Contract, e
 		ID: id,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: contract.GetKey("info"), TableName: aws.String(s.TableName),
+		Key: contract.GetKey("INFO"), TableName: aws.String(s.TableName),
 	})
 	if err != nil {
 		return contract, err
@@ -279,7 +279,7 @@ func (s *DynamoDBStore) GetContractOwner(ctx context.Context, id string) (Party,
 		ContractID: 0,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: contract.GetKey("role#owner"), TableName: aws.String(s.TableName),
+		Key: contract.GetKey("ROLE#owner"), TableName: aws.String(s.TableName),
 	})
 	if err != nil {
 		return party, err
@@ -311,11 +311,11 @@ func (s *DynamoDBStore) CreateSession(ctx context.Context, arg CreateSessionPara
 	}
 	dynamoArg := DynamoCreateSessionParams{
 		Pk: fmt.Sprintf(
-			"session#%s",
+			"SESSION#%s",
 			arg.ID,
 		),
 		Sk: fmt.Sprintf(
-			"user#%s",
+			"USER#%s",
 			arg.Username,
 		),
 		Session: session,
