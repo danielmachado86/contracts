@@ -115,6 +115,12 @@ func (server *Server) createUser(ctx *gin.Context) {
 			}
 
 		}
+		server.Logger.Error("database error")
+		ctx.JSON(http.StatusInternalServerError, errorResponse(
+			err,
+			http.StatusInternalServerError,
+		))
+		return
 
 	}
 
