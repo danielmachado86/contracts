@@ -1,139 +1,219 @@
-{
-    "category": "rental",
-    "name": "real-state rental 2 parties periodic payment",
-    "description": "bounded contract with periodic payment",
-    "attributes":[
-        {
-            "name": "contract_parties",
-            "description": "contract_max_parties_2_parties",
-            "parameters": [
-                {
-                    "name": "min",
-                    "value": 2
-                },
-                {
-                    "name": "max",
-                    "value": 2
-                }
-            ],
-            "inputs": [],
-            "outputs": [
-                "contract_parties"
-            ]
-        },
-        {
-            "name": "contract_signatures",
-            "description": "contract_signatures_max_2",
-            "parameters":  [],
-            "inputs": [],
-            "outputs": [
-                "contract_signatures"
-            ]
-        },
-        {
-            "name": "contract_is_signed",
-            "description": "contract_2_parties_is_signed",
-            "parameters": [
-                {
-                    "name": "signatures",
-                    "value": 2
-                }
-            ],
-            "inputs": [
-                "contract_signatures"
-            ],
-            "outputs": [
-                "contract_is_signed"
-            ]
-        },
-        {
-            "name": "contract_signature_date",
-            "description": "contract_signature_date",
-            "parameters":  [],
-            "inputs": [
-                "contract_is_signed"
-            ],
-            "outputs": [
-                "contract_signature_date"
-            ]
-        },
-        {
-            "name": "contract_start_date",
-            "description": "contract_start_date_next_day",
-            "parameters": [
-                {
-                    "name": "when",
-                    "value": "next_day"
-                }
-            ],
-            "inputs": [
-                "contract_signature_date"
-            ],
-            "outputs": [
-                "contract_start_date"
-            ]
-        },
-        {
-            "name": "contract_end_date",
-            "description": "contract_end_12_months",
-            "parameters": [
-                {
-                    "name": "period",
-                    "value":  12
-                },
-                {
-                    "name": "units",
-                    "value":  "month"
-                }
-                
-            ],
-            "inputs": [
-                "contract_start_date"
-            ],
-            "outputs": [
-                "contract_end_date"
-            ]
-        },
-        {
-            "name": "contract_renew_deadline",
-            "description": "contract_renew_deadline_3_months_before_end",
-            "parameters": [
-                {
-                    "name": "period",
-                    "value":  3
-                },
-                {
-                    "name": "units",
-                    "value":  "month"
-                }
-            ],
-            "inputs": [
-                "contract_end_date"
-            ],
-            "outputs": [
-                "contract_renew_deadline"
-            ]
-        },
-        {
-            "name": "contract_installment_plan",
-            "description": "contract_installment_plan_monthly",
-            "parameters": [
-                {
-                    "name": "period",
-                    "value":  1
-                },
-                {
-                    "name": "units",
-                    "value":  "month"
-                }
-            ],
-            "inputs": [
-                "contract_start_date",
-                "contract_duration"
-            ],
-            "outputs": [
-                "contract_installment_plan"
-            ]
-        }
-    ]
-}
+[
+    {
+        "name": "party_list",
+        "description": "query contract party list",
+        "type": "datasource",
+        "parameters": [],
+        "inputs": [
+            {
+                "type": "metadata",
+                "name": "contract_id"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "datasource",
+                "name": "party_list"
+            }
+        ]
+    },
+    {
+        "name": "enough_parties",
+        "description": "contract_parties_min_2_max_2",
+        "type": "compliance",
+        "parameters": [
+            {
+                "name": "min",
+                "value": 2
+            },
+            {
+                "name": "max",
+                "value": 2
+            }
+        ],
+        "inputs": [
+            {
+                "type": "datasource",
+                "name": "party_list"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "compliance",
+                "name": "enough_parties"
+            }
+        ]
+    },
+    {
+        "name": "signature_list",
+        "description": "contract_signature_list",
+        "type": "datasource",
+        "parameters":  [],
+        "inputs": [
+            {
+                "type": "metadata",
+                "name": "contract_id"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "datasource",
+                "name": "signature_list"
+            }
+        ]
+    },
+    {
+        "name": "is_signed",
+        "description": "contract_signatures_min_2_max_2",
+        "type": "compliance",
+        "parameters": [
+            {
+                "name": "signatures",
+                "value": 2
+            }
+        ],
+        "inputs": [
+            {
+                "type": "datasource",
+                "name": "signature_list"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "compliance",
+                "name": "is_signed"
+            }
+        ]
+    },
+    {
+        "name": "signature_date",
+        "description": "signature_date",
+        "type": "terms",
+        "parameters":  [],
+        "inputs": [
+            {
+                "type": "compliance",
+                "name": "is_signed"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "terms",
+                "name": "signature_date"
+            }
+        ]
+    },
+    {
+        "name": "start_date",
+        "description": "start_date_next_day",
+        "type": "terms",
+        "parameters": [
+            {
+                "name": "when",
+                "value": "next_day"
+            }
+        ],
+        "inputs": [
+            {
+                "type": "terms",
+                "name": "signature_date"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "terms",
+                "name": "start_date"
+            }
+        ]
+    },
+    {
+        "name": "end_date",
+        "description": "contract_end_12_months",
+        "type": "terms",
+        "parameters": [
+            {
+                "name": "period",
+                "value":  12
+            },
+            {
+                "name": "units",
+                "value":  "month"
+            }
+            
+        ],
+        "inputs": [
+            {
+                "type": "terms",
+                "name": "start_date"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "terms",
+                "name": "end_date"
+            },
+            {
+                "type": "parameter",
+                "name": "duration"
+            }
+        ]
+    },
+    {
+        "name": "renew_deadline",
+        "description": "contract_renew_deadline_3_months_before_end",
+        "type": "terms",
+        "parameters": [
+            {
+                "name": "period",
+                "value":  3
+            },
+            {
+                "name": "units",
+                "value":  "month"
+            }
+        ],
+        "inputs": [
+            {
+                "type": "terms",
+                "name": "end_date"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "terms",
+                "name": "renew_deadline"
+            }
+        ]
+    },
+    {
+        "name": "installment_plan",
+        "description": "contract_installment_plan_monthly",
+        "type": "terms",
+        "parameters": [
+            {
+                "name": "period",
+                "value":  1
+            },
+            {
+                "name": "units",
+                "value":  "month"
+            }
+        ],
+        "inputs": [
+            {
+                "type": "terms",
+                "name": "start_date"
+            },
+            {
+                "type": "parameter",
+                "name": "duration"
+            }
+        ],
+        "outputs": [
+            {
+                "type": "terms",
+                "name": "installment_plan"
+            }
+        ]
+    }
+]

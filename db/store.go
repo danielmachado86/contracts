@@ -15,12 +15,12 @@ type SQLStore struct {
 	*Queries
 }
 
-func NewSQLStore(db *sql.DB) Store {
-	return &SQLStore{
-		db:      db,
-		Queries: New(db),
-	}
-}
+// func NewSQLStore(db *sql.DB) Store {
+// 	return &SQLStore{
+// 		db:      db,
+// 		Queries: New(db),
+// 	}
+// }
 
 type DynamoDBStore struct {
 	db        *dynamodb.Client

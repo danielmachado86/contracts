@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		server.Logger.Fatalf("cannot load config:", err)
 	}
-	dynamoClient, err := db.CreateLocalClient()
+	dynamoClient, err := db.CreateLocalClient(config)
 	store := db.NewDynamoDBStore(dynamoClient)
 
 	server.Logger.Infof("configuring server...")

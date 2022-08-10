@@ -10,7 +10,9 @@ import (
 
 type Contract struct {
 	ID        string     `json:"id" dynamodbav:"id"`
+	Name  string    `json:"name" dynamodbav:"name"`
 	Template  string    `json:"template" dynamodbav:"template"`
+	Description  string    `json:"description" dynamodbav:"description"`
 	CreatedAt time.Time `json:"createdAt" dynamodbav:"createdAt"`
 }
 

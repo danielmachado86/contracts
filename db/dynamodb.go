@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/danielmachado86/contracts/utils"
 	"github.com/google/uuid"
 )
 
@@ -253,6 +254,8 @@ func (c Contract) GetKey(rangeKey string) map[string]types.AttributeValue {
 	return map[string]types.AttributeValue{"pk": pk, "sk": sk}
 }
 
+func (s *DynamoDBStore) GetPatyList(ctx context.Context, id string) (Contract, error) {
+}
 func (s *DynamoDBStore) GetContract(ctx context.Context, id string) (Contract, error) {
 	contract := Contract{
 		ID: id,
@@ -333,14 +336,14 @@ func (s *DynamoDBStore) CreateSession(ctx context.Context, arg CreateSessionPara
 	}
 	return session, nil
 }
-func CreateLocalClient() (*dynamodb.Client, error) {
+func CreateLocalClient(configEnv utils.Config) (*dynamodb.Client, error) {
 	customResolver := aws.EndpointResolverWithOptionsFunc(
 		func(service, region string, _ ...interface{}) (aws.Endpoint, error) {
 			return aws.Endpoint{
 				PartitionID:       "aws",
 				SigningRegion:     "us-east-1",
 				Source:            aws.EndpointSourceCustom,
-				URL:               "http://localhost:8000",
+				URL:               configEnv.DBSource,
 				HostnameImmutable: true,
 			}, nil
 		},

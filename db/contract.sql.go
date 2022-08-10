@@ -28,8 +28,10 @@ LIMIT 1
 `
 
 type CreateContractParams struct {
-	Owner    PartyView `json:"owner"`
-	Template string `json:"template"`
+	Owner    PartyView `json:"owner" dynamodbav:"owner"`
+	Name string `json:"name" dynamodbav:"name"`
+	Description string `json:"description" dynamodbav:"description"`
+	Template string `json:"template" dynamodbav:"template"`
 }
 
 func (q *Queries) CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error) {
