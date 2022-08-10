@@ -254,7 +254,8 @@ func (c Contract) GetKey(rangeKey string) map[string]types.AttributeValue {
 	return map[string]types.AttributeValue{"pk": pk, "sk": sk}
 }
 
-func (s *DynamoDBStore) GetPatyList(ctx context.Context, id string) (Contract, error) {
+func (s *DynamoDBStore) GetPartyList(ctx context.Context, id string) (Contract, error) {
+
 }
 func (s *DynamoDBStore) GetContract(ctx context.Context, id string) (Contract, error) {
 	contract := Contract{

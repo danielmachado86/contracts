@@ -2,22 +2,27 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	db "github.com/danielmachado86/contracts/db"
+	"github.com/danielmachado86/contracts/rules"
 	"github.com/danielmachado86/contracts/token"
 	"github.com/gin-gonic/gin"
 )
 
 type createContractRequest struct {
-	Template string `json:"template" binding:"required,oneof=rental freelance services"`
+	Name        string `json:"name" dynamodbav:"name" binding:"required"`
+	Template    string `json:"template" binding:"required,oneof=rental freelance services"`
+	Description string `json:"description" dynamodbav:"description"`
 }
 
 type createContractResponse struct {
-	Username string      `json:"username"`
-	Contract db.Contract `json:"contract"`
-	Party    string      `json:"party"`
+	Username    string      `json:"username"`
+	Contract    db.Contract `json:"contract"`
+	ContractUrl string      `json:"contract_url"`
+	Party       string      `json:"party"`
 }
 
 func (server *Server) createContract(ctx *gin.Context) {
@@ -47,8 +52,10 @@ func (server *Server) createContract(ctx *gin.Context) {
 	}
 
 	arg := db.CreateContractParams{
-		Template: req.Template,
-		Owner:    party,
+		Name:        req.Name,
+		Description: req.Description,
+		Template:    req.Template,
+		Owner:       party,
 	}
 
 	contract, err := server.store.CreateContract(ctx, arg)
@@ -58,12 +65,35 @@ func (server *Server) createContract(ctx *gin.Context) {
 		return
 	}
 
+	var meta map[string]interface{}
+	mContract, err := json.Marshal(contract)
+	if err != nil {
+		server.Logger.Errorf("failed to marshal contract")
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+	err = json.Unmarshal(mContract, &meta)
+	if err != nil {
+		server.Logger.Errorf("failed to unmarshal contract")
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	err = rules.CalculateTerms(ctx, server.store, meta)
+	if err != nil {
+		server.Logger.Errorf("failed to calculate contract")
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err, http.StatusInternalServerError))
+		return
+	}
+
+	contractUrl := fmt.Sprintf("http://localhost:8080/contracts/%s", contract.ID)
 	ownerURL := fmt.Sprintf("http://localhost:8080/contracts/%s/users/%s", contract.ID, authPayload.Username)
 
 	rsp := createContractResponse{
-		Username: authPayload.Username,
-		Contract: contract,
-		Party:    ownerURL,
+		Username:    authPayload.Username,
+		Contract:    contract,
+		ContractUrl: contractUrl,
+		Party:       ownerURL,
 	}
 
 	ctx.JSON(http.StatusCreated, rsp)

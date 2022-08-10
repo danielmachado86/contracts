@@ -1,6 +1,7 @@
 package rules
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,18 +18,18 @@ import (
 // 	)
 // }
 
-func getParams(attributes *Attributes) map[string]interface{} {
+func paramsToMap(o_params []Parameter) map[string]interface{} {
 	params := make(map[string]interface{})
-	for _, param := range attributes.Parameters {
+	for _, param := range o_params {
 		params[param.Name] = param.Value
 	}
 	return params
 }
 
-func checkInputs(inputs []string, ruleRegistry map[string]Rule) error {
+func checkInputs(inputs []RuleCategory, ruleRegistry map[string]Rule) error {
 	var err error
 	for _, input := range inputs {
-		rule := ruleRegistry[input]
+		rule := ruleRegistry[input.Name]
 		err = rule.Run(ruleRegistry)
 		if err != nil {
 			return err
@@ -37,16 +38,71 @@ func checkInputs(inputs []string, ruleRegistry map[string]Rule) error {
 	return nil
 }
 
-type PartiesFactory struct{}
+type PartiesListFactory struct {
+	store db.Store
+}
 
-func (factory *PartiesFactory) Create(attributes *Attributes) Rule {
-	params := getParams(attributes)
+func (factory *PartiesListFactory) Create(specs *Spec) Rule {
+	return &PartiesList{
+		Name:    specs.Name,
+		Inputs:  specs.Inputs,
+		Outputs: specs.Outputs,
+		store:   factory.store,
+	}
+}
+
+type PartiesList struct {
+	Name    string
+	Inputs  []RuleCategory
+	Outputs []RuleCategory
+	store   db.Store
+}
+
+func NewPartiesListRule(attributes *Spec) (Rule, error) {
+	factory := PartiesListFactory{}
+	return factory.Create(attributes), nil
+}
+
+func (rule *PartiesList) Run(ruleRegistry map[string]Rule, result ResultContract) (map[string]interface{}, error) {
+
+	err := checkInputs(rule.Inputs, ruleRegistry)
+	if err != nil {
+		return nil, err
+	}
+	id := result["metadata"].(map[string]interface{})["id"].(string)
+	parties, err := rule.store.GetPartyList(context.Background(), id)
+
+	output := make(map[string]interface{})
+
+	return output, nil
+}
+
+func (rule *PartiesList) GetName() string {
+	return rule.Name
+}
+
+func (rule *PartiesList) Save(ruleRegistry map[string]Rule, result ResultContract) error {
+	output, err := rule.Run(ruleRegistry)
+	if err != nil {
+		return err
+	}
+	for k, v := range output {
+		result[k] = v
+	}
+	return nil
+}
+
+type EnoughPartiesFactory struct{}
+
+func (factory *EnoughPartiesFactory) Create(attributes *Specs, store db.Store) Rule {
+	params := paramsToMap(attributes)
 	return &Parties{
 		Name:    attributes.Name,
 		Max:     int(params["max"].(float64)),
 		Min:     int(params["min"].(float64)),
 		Inputs:  attributes.Inputs,
-		Outputs: make(map[string]interface{}),
+		Outputs: attributes.Outputs,
+		store:   store,
 	}
 }
 
@@ -54,13 +110,13 @@ type Parties struct {
 	Name    string
 	Max     int
 	Min     int
-	Parties []*db.Party
-	Inputs  []string
-	Outputs map[string]interface{}
+	Inputs  []RuleCategory
+	Outputs []RuleCategory
+	store   db.Store
 }
 
-func NewPartiesRule(attributes *Attributes) (Rule, error) {
-	factory := PartiesFactory{}
+func NewPartiesRule(attributes *Specs) (Rule, error) {
+	factory := EnoughPartiesFactory{}
 	return factory.Create(attributes), nil
 }
 
@@ -85,7 +141,7 @@ func (rule *Parties) GetOutput(outputName string) interface{} {
 
 type SignaturesFactory struct{}
 
-func (factory *SignaturesFactory) Create(attributes *Attributes) Rule {
+func (factory *SignaturesFactory) Create(attributes *Specs) Rule {
 	return &Signatures{
 		Name:    attributes.Name,
 		Inputs:  attributes.Inputs,
@@ -100,7 +156,7 @@ type Signatures struct {
 	Outputs    map[string]interface{}
 }
 
-func NewSignaturesRule(attributes *Attributes) (Rule, error) {
+func NewSignaturesRule(attributes *Specs) (Rule, error) {
 	factory := SignaturesFactory{}
 	return factory.Create(attributes), nil
 }
@@ -126,8 +182,8 @@ func (rule *Signatures) GetOutput(outputName string) interface{} {
 
 type IsSignedFactory struct{}
 
-func (factory *IsSignedFactory) Create(attributes *Attributes) Rule {
-	params := getParams(attributes)
+func (factory *IsSignedFactory) Create(attributes *Specs) Rule {
+	params := paramsToMap(attributes)
 	return &IsSigned{
 		Name:       attributes.Name,
 		Signatures: int(params["signatures"].(float64)),
@@ -143,7 +199,7 @@ type IsSigned struct {
 	Outputs    map[string]interface{}
 }
 
-func NewIsSignedRule(attributes *Attributes) (Rule, error) {
+func NewIsSignedRule(attributes *Specs) (Rule, error) {
 	factory := IsSignedFactory{}
 	return factory.Create(attributes), nil
 }
@@ -176,7 +232,7 @@ func (rule *IsSigned) GetOutput(outputName string) interface{} {
 
 type SignatureDateFactory struct{}
 
-func (factory *SignatureDateFactory) Create(attributes *Attributes) Rule {
+func (factory *SignatureDateFactory) Create(attributes *Specs) Rule {
 	return &SignatureDate{
 		Name:    attributes.Name,
 		Inputs:  attributes.Inputs,
@@ -190,7 +246,7 @@ type SignatureDate struct {
 	Outputs map[string]interface{}
 }
 
-func NewSignatureDateRule(attributes *Attributes) (Rule, error) {
+func NewSignatureDateRule(attributes *Specs) (Rule, error) {
 	factory := SignatureDateFactory{}
 	return factory.Create(attributes), nil
 }

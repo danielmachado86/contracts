@@ -1,41 +1,49 @@
 package rules
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
+	"github.com/danielmachado86/contracts/db"
 )
 
 type Value interface{}
+
+type RuleCategory struct {
+	Type string
+	Name string
+}
 
 type Parameter struct {
 	Name  string `json:"name"`
 	Value Value  `json:"value"`
 }
-type Attributes struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Parameters  []Parameter `json:"parameters"`
-	Inputs      []string    `json:"inputs"`
-	Outputs     []string    `json:"outputs"`
+type Spec struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Type        string         `json:"type"`
+	Parameters  []Parameter    `json:"parameters"`
+	Inputs      []RuleCategory `json:"inputs"`
+	Outputs     []RuleCategory `json:"outputs"`
 }
 
-type TemplateSpecification struct {
-	Category    string        `json:"category"`
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Attributes  []*Attributes `json:"attributes"`
-}
+type RuleEngine []*Spec
+type ResultContract map[string]interface{}
+type Metadata map[string]interface{}
 
 type Rule interface {
-	Run(map[string]Rule) error
+	Run(map[string]Rule, ResultContract) (map[string]interface{}, error)
+	Save(map[string]Rule, ResultContract) error
 	GetName() string
-	GetOutput(string) interface{}
 }
 
 type RuleFactory interface {
-	Create(*Attributes) Rule
+	Create(*Spec) Rule
 }
 
-func CreateRule(attributes *Attributes) (Rule, error) {
+func CreateRule(attributes *Spec) (Rule, error) {
 	if attributes.Name == "contract_parties" {
 		return NewPartiesRule(attributes)
 	}
@@ -66,4 +74,37 @@ func CreateRule(attributes *Attributes) (Rule, error) {
 
 	return nil, err
 
+}
+
+func CalculateTerms(ctx context.Context, store db.Store, meta Metadata) error {
+	file, err := ioutil.ReadFile("rental_contract.json")
+	if err != nil {
+		return err
+	}
+	template := make(RuleEngine, 0)
+	err = json.Unmarshal([]byte(file), template)
+	if err != nil {
+		return err
+	}
+
+	result := make(ResultContract)
+	result["metadata"] = meta
+
+	ruleRegistry := make(map[string]Rule)
+
+	for _, spec := range template {
+		ruleRegistry[spec.Name], err = CreateRule(spec)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, rule := range ruleRegistry {
+		err = rule.Save(ruleRegistry, result)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
