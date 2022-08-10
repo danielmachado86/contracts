@@ -1,10 +1,4 @@
 services:
-  postgres:
-    image: postgres:14.2-alpine
-    environment:
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_USER=root
-      - POSTGRES_DB=contracts
   dynamodb-local:
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     image: "amazon/dynamodb-local:latest"
@@ -22,8 +16,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_SOURCE=postgresql://root:secret@postgres:5432/contracts?sslmode=disable
+      - DB_SOURCE=http://localhost:8000
     depends_on:
-      - postgres
-    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
+      - dynamodb-local
     command: ["/app/main"]
