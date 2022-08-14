@@ -3,7 +3,6 @@ package rules
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 
 	"github.com/danielmachado86/contracts/db"
@@ -29,50 +28,43 @@ type Spec struct {
 	Outputs     []RuleCategory `json:"outputs"`
 }
 
-type RuleEngine []*Spec
+type Specs []*Spec
 type ResultContract map[string]interface{}
 type Metadata map[string]interface{}
 
+type ExternalData interface {
+	Run(db.Store, ResultContract) (ResultContract, error)
+}
+
 type Rule interface {
-	Run(map[string]Rule, ResultContract) (map[string]interface{}, error)
-	Save(map[string]Rule, ResultContract) error
-	GetName() string
+	Run(map[string]Rule, ResultContract) (ResultContract, error)
 }
 
 type RuleFactory interface {
 	Create(*Spec) Rule
 }
 
-func CreateRule(attributes *Spec) (Rule, error) {
-	if attributes.Name == "contract_parties" {
-		return NewPartiesRule(attributes)
-	}
-	if attributes.Name == "contract_signatures" {
-		return NewSignaturesRule(attributes)
+func (spec *Spec) RegisterDataSource(ruleRegistry map[string]Rule, store db.Store) (map[string]Rule, error) {
+	ruleRegistry[spec.Name] = NewDatasource(store, spec)
+	return ruleRegistry, nil
+}
 
+func (spec *Spec) RegisterRule(ruleRegistry map[string]Rule) (map[string]Rule, error) {
+	var rule Rule
+	switch spec.Name {
+	case "contract_parties":
+		rule = NewEnoughPartiesRule(spec)
+	case "contract_signatures":
+		rule = NewEnoughSignaturesRule(spec)
+	case "contract_is_signed":
+		rule = NewIsSignedRule(spec)
+	case "contract_signature_date":
+		rule = NewSignatureDateRule(spec)
+	default:
+		rule = nil
 	}
-	if attributes.Name == "contract_is_signed" {
-		return NewIsSignedRule(attributes)
-	}
-	if attributes.Name == "contract_signature_date" {
-		return NewSignatureDateRule(attributes)
-	}
-	if attributes.Name == "contract_start_date" {
-		return nil, nil
-	}
-	if attributes.Name == "contract_end_date" {
-		return nil, nil
-	}
-	if attributes.Name == "contract_renew_deadline" {
-		return nil, nil
-	}
-	if attributes.Name == "contract_installment_plan" {
-		return nil, nil
-	}
-
-	err := fmt.Errorf("Rule %s doesn't exist", attributes.Name)
-
-	return nil, err
+	ruleRegistry[spec.Name] = rule
+	return ruleRegistry, nil
 
 }
 
@@ -81,8 +73,8 @@ func CalculateTerms(ctx context.Context, store db.Store, meta Metadata) error {
 	if err != nil {
 		return err
 	}
-	template := make(RuleEngine, 0)
-	err = json.Unmarshal([]byte(file), template)
+	specs := make(Specs, 0)
+	err = json.Unmarshal([]byte(file), &specs)
 	if err != nil {
 		return err
 	}
@@ -92,15 +84,20 @@ func CalculateTerms(ctx context.Context, store db.Store, meta Metadata) error {
 
 	ruleRegistry := make(map[string]Rule)
 
-	for _, spec := range template {
-		ruleRegistry[spec.Name], err = CreateRule(spec)
+	for _, spec := range specs {
+		switch spec.Type {
+		case "datasource":
+			ruleRegistry, err = spec.RegisterDataSource(ruleRegistry, store)
+		case "rule":
+			ruleRegistry, err = spec.RegisterRule(ruleRegistry)
+		}
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, rule := range ruleRegistry {
-		err = rule.Save(ruleRegistry, result)
+		result, err = rule.Run(ruleRegistry, result)
 		if err != nil {
 			return err
 		}

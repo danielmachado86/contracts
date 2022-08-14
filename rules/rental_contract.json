@@ -12,7 +12,7 @@
         ],
         "outputs": [
             {
-                "type": "datasource",
+                "type": "metadata",
                 "name": "party_list"
             }
         ]
@@ -20,7 +20,7 @@
     {
         "name": "enough_parties",
         "description": "contract_parties_min_2_max_2",
-        "type": "compliance",
+        "type": "rule",
         "parameters": [
             {
                 "name": "min",
@@ -33,7 +33,7 @@
         ],
         "inputs": [
             {
-                "type": "datasource",
+                "type": "metadata",
                 "name": "party_list"
             }
         ],
@@ -57,7 +57,7 @@
         ],
         "outputs": [
             {
-                "type": "datasource",
+                "type": "metadata",
                 "name": "signature_list"
             }
         ]
@@ -65,7 +65,7 @@
     {
         "name": "is_signed",
         "description": "contract_signatures_min_2_max_2",
-        "type": "compliance",
+        "type": "rule",
         "parameters": [
             {
                 "name": "signatures",
@@ -88,7 +88,7 @@
     {
         "name": "signature_date",
         "description": "signature_date",
-        "type": "terms",
+        "type": "rule",
         "parameters":  [],
         "inputs": [
             {
@@ -106,7 +106,7 @@
     {
         "name": "start_date",
         "description": "start_date_next_day",
-        "type": "terms",
+        "type": "rule",
         "parameters": [
             {
                 "name": "when",
@@ -129,7 +129,7 @@
     {
         "name": "end_date",
         "description": "contract_end_12_months",
-        "type": "terms",
+        "type": "rule",
         "parameters": [
             {
                 "name": "period",
@@ -161,7 +161,7 @@
     {
         "name": "renew_deadline",
         "description": "contract_renew_deadline_3_months_before_end",
-        "type": "terms",
+        "type": "rule",
         "parameters": [
             {
                 "name": "period",
@@ -188,7 +188,7 @@
     {
         "name": "installment_plan",
         "description": "contract_installment_plan_monthly",
-        "type": "terms",
+        "type": "rule",
         "parameters": [
             {
                 "name": "period",

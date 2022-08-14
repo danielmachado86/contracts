@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func loadTemplateFile(t *testing.T, template_file string) (TemplateSpecification, error) {
+func loadTemplateFile(t *testing.T, template_file string) (Specs, error) {
 	file, err := ioutil.ReadFile(template_file)
 	require.NoError(t, err)
 
-	template := TemplateSpecification{}
+	template := Specs{}
 	err = json.Unmarshal([]byte(file), &template)
 	return template, err
 }
@@ -24,27 +24,15 @@ func TestParties(t *testing.T) {
 	template, err := loadTemplateFile(t, "rental_contract.json")
 	require.NoError(t, err)
 
-	party1 := &db.Party{
-		Username:   "DanielM",
-		ContractID: 1,
-	}
-	party2 := &db.Party{
-		Username:   "JimenaL",
-		ContractID: 1,
-	}
-
-	var parties []*db.Party
-	parties = append(parties, party1)
-	parties = append(parties, party2)
+	result := make(ResultContract)
+	result["metadata"] = meta
 
 	ruleRegistry := make(map[string]Rule)
 
-	for _, attribute := range template.Attributes {
-		ruleRegistry[attribute.Name], err = CreateRule(attribute)
+	for _, spec := range template {
+		ruleRegistry[spec.Name], err = CreateRule(spec)
 		require.NoError(t, err)
 	}
-
-	ruleRegistry["contract_parties"].(*Parties).Parties = parties
 
 	rule := ruleRegistry["contract_parties"]
 	err = rule.Run(ruleRegistry)
@@ -96,7 +84,7 @@ func TestSignatures(t *testing.T) {
 	}
 
 	ruleRegistry["contract_parties"].(*Parties).Parties = parties
-	ruleRegistry["contract_signatures"].(*Signatures).Signatures = signatureList
+	ruleRegistry["contract_signatures"].(*EnoughSignatures).Signatures = signatureList
 
 	rule := ruleRegistry["contract_signatures"]
 	err = rule.Run(ruleRegistry)
@@ -148,7 +136,7 @@ func TestIsSignedRule(t *testing.T) {
 	}
 
 	ruleRegistry["contract_parties"].(*Parties).Parties = parties
-	ruleRegistry["contract_signatures"].(*Signatures).Signatures = signatureList
+	ruleRegistry["contract_signatures"].(*EnoughSignatures).Signatures = signatureList
 
 	rule := ruleRegistry["contract_is_signed"]
 	err = rule.Run(ruleRegistry)
@@ -200,7 +188,7 @@ func TestSignatureDateRule(t *testing.T) {
 	}
 
 	ruleRegistry["contract_parties"].(*Parties).Parties = parties
-	ruleRegistry["contract_signatures"].(*Signatures).Signatures = signatureList
+	ruleRegistry["contract_signatures"].(*EnoughSignatures).Signatures = signatureList
 
 	rule := ruleRegistry["contract_signature_date"]
 	err = rule.Run(ruleRegistry)
@@ -253,7 +241,7 @@ func TestSAllRules(t *testing.T) {
 	}
 
 	ruleRegistry["contract_parties"].(*Parties).Parties = partyList
-	ruleRegistry["contract_signatures"].(*Signatures).Signatures = signatureList
+	ruleRegistry["contract_signatures"].(*EnoughSignatures).Signatures = signatureList
 
 	for _, rule := range ruleRegistry {
 		err = rule.Run(ruleRegistry)
