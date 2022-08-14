@@ -19,7 +19,7 @@ type Contract struct {
 type Party struct {
 	Username   string    `json:"username"`
 	Role       string    `json:"role"`
-	ContractID int64     `json:"contractID"`
+	ContractID string     `json:"contractID"`
 	CreatedAt  time.Time `json:"createdAt"`
 }
 

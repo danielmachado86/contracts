@@ -83,7 +83,7 @@ LIMIT NULL
 OFFSET NULL
 `
 
-func (q *Queries) ListContractParties(ctx context.Context, contractID int64) ([]Party, error) {
+func (q *Queries) ListContractParties(ctx context.Context, contractID string) ([]Party, error) {
 	rows, err := q.db.QueryContext(ctx, listContractParties, contractID)
 	if err != nil {
 		return nil, err

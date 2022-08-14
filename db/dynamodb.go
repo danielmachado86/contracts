@@ -66,7 +66,7 @@ func (s *DynamoDBStore) CreateUser(ctx context.Context, arg CreateUserParams) (U
 		TransactItems: []types.TransactWriteItem{
 			{
 				Put: &types.Put{
-					TableName:                           &s.TableName,
+					TableName:                           aws.String(s.TableName),
 					Item:                                item,
 					ConditionExpression:                 aws.String("attribute_not_exists(pk)"),
 					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
@@ -74,7 +74,7 @@ func (s *DynamoDBStore) CreateUser(ctx context.Context, arg CreateUserParams) (U
 			},
 			{
 				Put: &types.Put{
-					TableName:                           &s.TableName,
+					TableName:                           aws.String(s.TableName),
 					Item:                                emailAv,
 					ConditionExpression:                 aws.String("attribute_not_exists(pk)"),
 					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
@@ -220,7 +220,7 @@ func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractPa
 		TransactItems: []types.TransactWriteItem{
 			{
 				Put: &types.Put{
-					TableName:                           &s.TableName,
+					TableName:                           aws.String(s.TableName),
 					Item:                                mContract,
 					ConditionExpression:                 aws.String("attribute_not_exists(pk)"),
 					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
@@ -228,7 +228,7 @@ func (s *DynamoDBStore) CreateContract(ctx context.Context, arg CreateContractPa
 			},
 			{
 				Put: &types.Put{
-					TableName:                           &s.TableName,
+					TableName:                           aws.String(s.TableName),
 					Item:                                mParty,
 					ConditionExpression:                 aws.String("attribute_not_exists(sk)"),
 					ReturnValuesOnConditionCheckFailure: types.ReturnValuesOnConditionCheckFailureAllOld,
@@ -254,9 +254,57 @@ func (c Contract) GetKey(rangeKey string) map[string]types.AttributeValue {
 	return map[string]types.AttributeValue{"pk": pk, "sk": sk}
 }
 
-func (s *DynamoDBStore) GetPartyList(ctx context.Context, id string) (Contract, error) {
+func (s *DynamoDBStore) ListContractParties(ctx context.Context, id string) ([]Party, error) {
 
+	expr, err := expression.NewBuilder().WithKeyCondition(expression.KeyAnd(
+		expression.KeyEqual(expression.Key("pk"), expression.Value("CONTRACT#"+id)),
+		expression.KeyBeginsWith(expression.Key("sk"), "ROLE#"),
+	)).Build()
+	if err != nil {
+		return nil, err
+	}
+	out, err := s.db.Query(ctx, &dynamodb.QueryInput{
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		KeyConditionExpression:    expr.KeyCondition(),
+		TableName:                 aws.String(s.TableName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	var parties []Party
+	err = attributevalue.UnmarshalListOfMaps(out.Items, &parties)
+	if err != nil {
+		return nil, err
+	}
+
+	return parties, nil
 }
+
+type ContractQueryParams struct {
+	ID string
+	Pk string
+	Sk string
+}
+
+func (s *DynamoDBStore) ContractQuery(ctx context.Context, arg ContractQueryParams) (Contract, error) {
+	contract := Contract{
+		ID: id,
+	}
+	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
+		Key: contract.GetKey("INFO"), TableName: aws.String(s.TableName),
+	})
+	if err != nil {
+		return contract, err
+	} else {
+		err = attributevalue.UnmarshalMap(response.Item, &contract)
+		if err != nil {
+			return contract, err
+		}
+	}
+	return contract, err
+}
+
 func (s *DynamoDBStore) GetContract(ctx context.Context, id string) (Contract, error) {
 	contract := Contract{
 		ID: id,
@@ -280,7 +328,7 @@ func (s *DynamoDBStore) GetContractOwner(ctx context.Context, id string) (Party,
 		ID: id,
 	}
 	party := Party{
-		ContractID: 0,
+		ContractID: id,
 	}
 	response, err := s.db.GetItem(ctx, &dynamodb.GetItemInput{
 		Key: contract.GetKey("ROLE#owner"), TableName: aws.String(s.TableName),

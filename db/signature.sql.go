@@ -71,7 +71,7 @@ LIMIT NULL
 OFFSET NULL
 `
 
-func (q *Queries) ListContractSignatures(ctx context.Context, contractID int64) ([]Signature, error) {
+func (q *Queries) ListContractSignatures(ctx context.Context, contractID string) ([]Signature, error) {
 	rows, err := q.db.QueryContext(ctx, listContractSignatures, contractID)
 	if err != nil {
 		return nil, err
