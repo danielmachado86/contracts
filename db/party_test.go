@@ -18,7 +18,7 @@ func createRandomParty(t *testing.T) Party {
 	args := CreatePartyParams{
 		Username:   user1.Username,
 		ContractID: contract.ID,
-		Role:       ContractRole(role),
+		Role:       role,
 	}
 	party, err := testQueries.CreateParty(context.Background(), args)
 	require.NoError(t, err)

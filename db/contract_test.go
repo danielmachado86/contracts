@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/danielmachado86/contracts/utils"
@@ -11,15 +10,18 @@ import (
 
 func createRandomContract(t *testing.T) Contract {
 	user := createRandomUser(t)
-	arg := CreateContractParams{
-		Template: TemplatesRental,
+	party := PartyView{
 		Username: user.Username,
+	}
+	arg := CreateContractParams{
+		Template: "rental",
+		Owner:    party,
 	}
 	contract, err := testQueries.CreateContract(context.Background(), arg)
 	require.NoError(t, err)
 	require.NotEmpty(t, contract)
 
-	require.Equal(t, TemplatesRental, contract.Template)
+	require.Equal(t, "rental", contract.Template)
 
 	require.NotZero(t, contract.ID)
 
@@ -32,6 +34,7 @@ func TestCreateContract(t *testing.T) {
 
 func TestGetContract(t *testing.T) {
 	contract1 := createRandomContract(t)
+
 	contract2, err := testQueries.GetContract(context.Background(), contract1.ID)
 
 	require.NoError(t, err)
@@ -46,7 +49,7 @@ func TestUpdateContract(t *testing.T) {
 
 	arg := UpdateContractParams{
 		ID:       contract1.ID,
-		Template: TemplatesRental,
+		Template: "rental",
 	}
 
 	contract2, err := testQueries.UpdateContract(context.Background(), arg)
@@ -59,27 +62,18 @@ func TestUpdateContract(t *testing.T) {
 
 }
 
-func TestDeleteContract(t *testing.T) {
-	contract1 := createRandomContract(t)
-
-	err := testQueries.DeleteContract(context.Background(), contract1.ID)
-	require.NoError(t, err)
-
-	contract2, err := testQueries.GetContract(context.Background(), contract1.ID)
-	require.Error(t, err)
-	require.EqualError(t, err, sql.ErrNoRows.Error())
-	require.Empty(t, contract2)
-}
-
 func TestListContract(t *testing.T) {
 	username := utils.RandomUser()
+	party := PartyView{
+		Username: username,
+	}
 
 	arg0 := CreateUserParams{
-		Name:           utils.RandomString(6),
+		FirstName:      utils.RandomString(6),
 		LastName:       utils.RandomString(6),
 		Username:       username,
 		Email:          utils.RandomEmail(),
-		HashedPassword: "password",
+		PasswordHashed: "password",
 	}
 	user, err := testQueries.CreateUser(context.Background(), arg0)
 	require.NoError(t, err)
@@ -96,8 +90,8 @@ func TestListContract(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		arg := CreateContractParams{
-			Template: Templates(utils.RandomTemplate()),
-			Username: username,
+			Template: utils.RandomTemplate(),
+			Owner:    party,
 		}
 
 		contract, err := testQueries.CreateContract(context.Background(), arg)
